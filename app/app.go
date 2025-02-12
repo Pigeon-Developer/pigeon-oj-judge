@@ -15,6 +15,8 @@ var (
 )
 
 func Boot() {
+	os.MkdirAll("/etc/pigeon-oj-judge", 0755)
+
 	flag.StringVar(&configPath, "config", "./config.json", "config file path")
 
 	configFile, err := os.Open(configPath)

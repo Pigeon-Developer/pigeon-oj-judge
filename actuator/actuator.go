@@ -52,7 +52,6 @@ func buildUserSubmitCode(job *solution.JudgeJob) {
 		Image:           "silkeh/clang:19-bookworm",
 		Cmd:             []string{"clang", "/app/main.c", "-o", "/app/main.bin"},
 	}, &container.HostConfig{
-		// AutoRemove: true,
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
@@ -78,12 +77,15 @@ func buildUserSubmitCode(job *solution.JudgeJob) {
 	case <-statusCh:
 	}
 
-	out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true})
+	out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		panic(err)
 	}
+	defer out.Close()
 
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+
+	cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 }
 
 // 运行用户提交，使用测试数据中 in 得到用户的 out
@@ -130,7 +132,6 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 			Image:           "silkeh/clang:19-bookworm",
 			Cmd:             []string{"bash", "-l", "-c", " cat /app/data.in | /app/main.bin > /app/data.out"},
 		}, &container.HostConfig{
-			// AutoRemove: true,
 			Mounts: []mount.Mount{
 				{
 					ReadOnly: false,
@@ -173,8 +174,11 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 		if err != nil {
 			panic(err)
 		}
+		defer out.Close()
 
 		stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+
+		cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 	}
 }
 
