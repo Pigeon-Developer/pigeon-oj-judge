@@ -1,0 +1,15 @@
+{
+  "solution_source": {
+    "problem_provider": {
+      "type": "",
+      "data": {}
+    },
+    "rw_config": {
+      "type": "",
+      "data": {
+        "dbType": "mysql",
+        "dsn": "root:testtest@tcp(127.0.0.1:3306)/jol?charset=utf8mb4&parseTime=True"
+      }
+    }
+  }
+}
