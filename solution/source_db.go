@@ -66,12 +66,6 @@ func (source SourceDB) GetOne() (*Solution, error) {
 
 	ret.Code = sourceCode.Source
 
-	_, err = source.db.Exec(`UPDATE solution SET result=4 WHERE solution_id = ?`, ret.SolutionId)
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &ret, nil
 }
 

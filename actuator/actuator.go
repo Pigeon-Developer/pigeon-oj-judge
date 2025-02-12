@@ -2,6 +2,7 @@ package actuator
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -19,6 +20,13 @@ import (
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
 )
 
+type RunResult struct {
+	// 程序的退出 code
+	StatusCode int
+	Stdout     string
+	Stderr     string
+}
+
 const BasePath = "/etc/pigeon-oj-judge"
 
 func writeFile(filePath string, content string) {
@@ -31,12 +39,12 @@ func writeFile(filePath string, content string) {
 	file.WriteString(content)
 }
 
-// 编译代码
-func buildUserSubmitCode(job *solution.JudgeJob) {
-	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
-
-	os.MkdirAll(solutionPath, os.ModePerm)
-	writeFile(path.Join(solutionPath, "main.c"), job.Data.Code)
+func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int) RunResult {
+	ret := RunResult{
+		StatusCode: 0,
+		Stdout:     "",
+		Stderr:     "",
+	}
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -44,21 +52,13 @@ func buildUserSubmitCode(job *solution.JudgeJob) {
 		panic(err)
 	}
 
-	buildTimeLimit := 5
-
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		NetworkDisabled: true,
-		StopTimeout:     &buildTimeLimit,
-		Image:           "silkeh/clang:19-bookworm",
-		Cmd:             []string{"clang", "/app/main.c", "-o", "/app/main.bin"},
+		StopTimeout:     &timeLimit,
+		Image:           image,
+		Cmd:             cmd,
 	}, &container.HostConfig{
-		Mounts: []mount.Mount{
-			{
-				Type:   mount.TypeBind,
-				Source: solutionPath,
-				Target: "/app",
-			},
-		},
+		Mounts: mounts,
 	}, nil, nil, "")
 	if err != nil {
 		panic(err)
@@ -74,7 +74,10 @@ func buildUserSubmitCode(job *solution.JudgeJob) {
 		if err != nil {
 			panic(err)
 		}
-	case <-statusCh:
+	case result := <-statusCh:
+		{
+			ret.StatusCode = int(result.StatusCode)
+		}
 	}
 
 	out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
@@ -83,9 +86,41 @@ func buildUserSubmitCode(job *solution.JudgeJob) {
 	}
 	defer out.Close()
 
-	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+	var stdout bytes.Buffer
+	stdoutWriter := bufio.NewWriter(&stdout)
+
+	var stderr bytes.Buffer
+	stderrWriter := bufio.NewWriter(&stderr)
+
+	stdcopy.StdCopy(stdoutWriter, stderrWriter, out)
+	stdoutWriter.Flush()
+	stderrWriter.Flush()
+
+	ret.Stdout = stdout.String()
+	ret.Stderr = stderr.String()
 
 	cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
+
+	return ret
+}
+
+// 编译代码
+func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
+	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
+
+	os.MkdirAll(solutionPath, os.ModePerm)
+	writeFile(path.Join(solutionPath, "main.c"), job.Data.Code)
+
+	buildTimeLimit := 5
+	ret := runInDocker("silkeh/clang:19-bookworm", []string{"clang", "/app/main.c", "-o", "/app/main.bin"}, []mount.Mount{
+		{
+			Type:   mount.TypeBind,
+			Source: solutionPath,
+			Target: "/app",
+		},
+	}, buildTimeLimit)
+
+	return ret
 }
 
 // 运行用户提交，使用测试数据中 in 得到用户的 out
@@ -118,67 +153,28 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 			panic(err)
 		}
 
-		ctx := context.Background()
-		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-		if err != nil {
-			panic(err)
-		}
-
 		runTimeLimit := int(math.Ceil(job.Data.TimeLimit))
 
-		resp, err := cli.ContainerCreate(ctx, &container.Config{
-			NetworkDisabled: true,
-			StopTimeout:     &runTimeLimit,
-			Image:           "silkeh/clang:19-bookworm",
-			Cmd:             []string{"bash", "-l", "-c", " cat /app/data.in | /app/main.bin > /app/data.out"},
-		}, &container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					ReadOnly: false,
-					Type:     mount.TypeBind,
-					Source:   exePath,
-					Target:   "/app/main.bin",
-				},
-				{
-					ReadOnly: true,
-					Type:     mount.TypeBind,
-					Source:   inDataPath,
-					Target:   "/app/data.in",
-				},
-				{
-					ReadOnly: false,
-					Type:     mount.TypeBind,
-					Source:   outDataPath,
-					Target:   "/app/data.out",
-				},
+		runInDocker("silkeh/clang:19-bookworm", []string{"bash", "-l", "-c", " cat /app/data.in | /app/main.bin > /app/data.out"}, []mount.Mount{
+			{
+				ReadOnly: false,
+				Type:     mount.TypeBind,
+				Source:   exePath,
+				Target:   "/app/main.bin",
 			},
-		}, nil, nil, "")
-		if err != nil {
-			panic(err)
-		}
-
-		if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-			panic(err)
-		}
-
-		statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-		select {
-		case err := <-errCh:
-			if err != nil {
-				panic(err)
-			}
-		case <-statusCh:
-		}
-
-		out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true})
-		if err != nil {
-			panic(err)
-		}
-		defer out.Close()
-
-		stdcopy.StdCopy(os.Stdout, os.Stderr, out)
-
-		cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
+			{
+				ReadOnly: true,
+				Type:     mount.TypeBind,
+				Source:   inDataPath,
+				Target:   "/app/data.in",
+			},
+			{
+				ReadOnly: false,
+				Type:     mount.TypeBind,
+				Source:   outDataPath,
+				Target:   "/app/data.out",
+			},
+		}, runTimeLimit)
 	}
 }
 
@@ -255,7 +251,12 @@ func judgeUserSubmitCode(job *solution.JudgeJob) int {
 }
 
 func JudgeUserSubmit(job *solution.JudgeJob) int {
-	buildUserSubmitCode(job)
+	job.UpdateResult(solution.Result_CI)
+	compileResult := buildUserSubmitCode(job)
+	if compileResult.StatusCode != 0 {
+		return solution.Result_CE
+	}
+	job.UpdateResult(solution.Result_RJ)
 	runUserSubmitCode(job)
 	return judgeUserSubmitCode(job)
 }

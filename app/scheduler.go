@@ -24,12 +24,6 @@ func fetchSolutionFromPool() (*solution.JudgeJob, error) {
 	return nil, err
 }
 
-func writeSolutionResult(job *solution.JudgeJob, result int) {
-	solution.GetSolutionInstance(job.SourceID).Source.Update(job.Data.SolutionId, solution.SolutionResult{
-		Result: result,
-	})
-}
-
 func RunLoop() {
 	for {
 		job, err := fetchSolutionFromPool()
@@ -37,7 +31,7 @@ func RunLoop() {
 			// 需要判题
 			result := actuator.JudgeUserSubmit(job)
 
-			writeSolutionResult(job, result)
+			job.UpdateResult(result)
 		} else {
 			fmt.Println(err)
 		}
