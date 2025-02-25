@@ -11,24 +11,25 @@ var (
 )
 
 func init() {
+	CurrentTag := "0.0.1"
 	RuntimeRegistry[Language_python] = ImageConfig{
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-python:DATE-TAG",
+		Image:    "pigeon-oj/runtime-python:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_c] = ImageConfig{
 		BuildCmd: "/app/build-c.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-cpp:DATE-TAG",
+		Image:    "pigeon-oj/runtime-cpp:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_cpp] = ImageConfig{
 		BuildCmd: "/app/build-cpp.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-python:DATE-TAG",
+		Image:    "pigeon-oj/runtime-cpp:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_java] = ImageConfig{
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-java:DATE-TAG",
+		Image:    "pigeon-oj/runtime-java:" + CurrentTag,
 	}
 }

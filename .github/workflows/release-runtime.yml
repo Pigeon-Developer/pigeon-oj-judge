@@ -1,0 +1,78 @@
+name: release-compose
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: code tag
+        required: true
+
+env:
+  cr_coding: g-yuie8424-docker.pkg.coding.net
+  cr_acr: registry.cn-hangzhou.aliyuncs.com
+  cr_tcr: ccr.ccs.tencentyun.com
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Coding Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.cr_coding }}
+          username: ${{ secrets.CODING_USERNAME }}
+          password: ${{ secrets.CODING_TOKEN }}
+      - name: Login to acr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.cr_acr }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.CR_TOKEN }}
+      - name: Login to tcr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.cr_tcr }}
+          username: ${{ secrets.TCR_USERNAME }}
+          password: ${{ secrets.CR_TOKEN }}
+      - name: Build and push - c/cpp
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/cpp/dockerfile
+          context: ./runtime/cpp
+          push: true
+          tags: |
+            pigeonojdev/runtime-cpp:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-cpp:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-cpp:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-cpp:${{ github.event.inputs.version }}
+      - name: Build and push - python
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/python/dockerfile
+          context: ./runtime/python
+          push: true
+          tags: |
+            pigeonojdev/runtime-python:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-python:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-python:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-python:${{ github.event.inputs.version }}
+      - name: Build and push - java
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/python/dockerfile
+          context: ./runtime/java
+          push: true
+          tags: |
+            pigeonojdev/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
