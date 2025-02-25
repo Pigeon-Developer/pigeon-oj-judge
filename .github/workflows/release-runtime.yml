@@ -1,4 +1,4 @@
-name: release-compose
+name: release-runtime
 
 on:
   workflow_dispatch:
