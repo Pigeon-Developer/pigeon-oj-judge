@@ -20,22 +20,22 @@ func init() {
 	RuntimeRegistry[Language_python] = ImageConfig{
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-python:" + CurrentTag,
+		Image:    "pigeonojdev/runtime-python:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_c] = ImageConfig{
 		BuildCmd: "/app/build-c.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-cpp:" + CurrentTag,
+		Image:    "pigeonojdev/runtime-cpp:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_cpp] = ImageConfig{
 		BuildCmd: "/app/build-cpp.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-cpp:" + CurrentTag,
+		Image:    "pigeonojdev/runtime-cpp:" + CurrentTag,
 	}
 	RuntimeRegistry[Language_java] = ImageConfig{
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
-		Image:    "pigeon-oj/runtime-java:" + CurrentTag,
+		Image:    "pigeonojdev/runtime-java:" + CurrentTag,
 	}
 }
 
