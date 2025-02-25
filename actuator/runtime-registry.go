@@ -1,5 +1,10 @@
 package actuator
 
+import (
+	"os"
+	"os/exec"
+)
+
 type ImageConfig struct {
 	BuildCmd string `json:"build_cmd"`
 	RunCmd   string `json:"run_cmd"`
@@ -11,7 +16,7 @@ var (
 )
 
 func init() {
-	CurrentTag := "0.0.1"
+	CurrentTag := "0.0.0-alpha.0"
 	RuntimeRegistry[Language_python] = ImageConfig{
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
@@ -31,5 +36,18 @@ func init() {
 		BuildCmd: "/app/build.sh",
 		RunCmd:   "/app/run.sh",
 		Image:    "pigeon-oj/runtime-java:" + CurrentTag,
+	}
+}
+
+func pull(image string) {
+	cmd := exec.Command("docker", "pull", image)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
+func PullBuiltinRuntime() {
+	for _, v := range RuntimeRegistry {
+		pull(v.Image)
 	}
 }

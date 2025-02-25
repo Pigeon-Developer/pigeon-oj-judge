@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
 )
 
@@ -22,12 +23,15 @@ func Boot() {
 	configFile, err := os.Open(configPath)
 	if err != nil {
 		fmt.Println("读取配置文件失败", err)
+		return
 	}
 	byteValue, _ := io.ReadAll(configFile)
 
 	var appConfig AppConfig
 
 	json.Unmarshal(byteValue, &appConfig)
+
+	actuator.PullBuiltinRuntime()
 
 	solution.NewSolutionPool(appConfig.SolutionSource)
 
