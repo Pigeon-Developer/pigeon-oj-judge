@@ -1,0 +1,6 @@
+FROM eclipse-temurin:21-jdk-noble
+
+RUN mkdir /app
+ADD build.sh /app/build.sh
+ADD run.sh /app/run.sh
+RUN chmod +x /app/*.sh

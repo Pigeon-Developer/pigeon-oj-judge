@@ -112,7 +112,9 @@ func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 	writeFile(path.Join(solutionPath, "main.c"), job.Data.Code)
 
 	buildTimeLimit := 5
-	ret := runInDocker("silkeh/clang:19-bookworm", []string{"clang", "/app/main.c", "-o", "/app/main.bin"}, []mount.Mount{
+
+	runtimeConfig := RuntimeRegistry[job.Data.Language]
+	ret := runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.BuildCmd}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: solutionPath,
@@ -146,7 +148,7 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 
 		inDataPath := path.Join(problemDataPath, e.Name())
 		outDataPath := path.Join(solutionPath, "output", strings.Replace(e.Name(), ".in", ".out", 1))
-		exePath := path.Join(solutionPath, "main.bin")
+		buildResultPath := path.Join(solutionPath, "build_result")
 
 		_, err := os.Create(outDataPath)
 		if err != nil {
@@ -155,12 +157,13 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 
 		runTimeLimit := int(math.Ceil(job.Data.TimeLimit))
 
-		runInDocker("silkeh/clang:19-bookworm", []string{"bash", "-l", "-c", " cat /app/data.in | /app/main.bin > /app/data.out"}, []mount.Mount{
+		runtimeConfig := RuntimeRegistry[job.Data.Language]
+		runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
 			{
 				ReadOnly: false,
 				Type:     mount.TypeBind,
-				Source:   exePath,
-				Target:   "/app/main.bin",
+				Source:   buildResultPath,
+				Target:   "/app/build_result",
 			},
 			{
 				ReadOnly: true,
