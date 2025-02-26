@@ -1,8 +1,10 @@
 {
   "solution_source": {
     "problem_provider": {
-      "type": "",
-      "data": {}
+      "type": "hustoj-local",
+      "data": {
+        "path": "/hustoj-data"
+      }
     },
     "rw_config": {
       "type": "",

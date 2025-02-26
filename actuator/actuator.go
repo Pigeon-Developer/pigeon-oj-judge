@@ -128,7 +128,9 @@ func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 // 运行用户提交，使用测试数据中 in 得到用户的 out
 func runUserSubmitCode(job *solution.JudgeJob) {
 	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
-	problemDataPath := path.Join(BasePath, "data", strconv.Itoa(job.Data.ProblemId))
+
+	dataPath := solution.GetSolutionDataPath(job.SourceID)
+	problemDataPath := path.Join(dataPath, strconv.Itoa(job.Data.ProblemId))
 
 	os.MkdirAll(path.Join(solutionPath, "output"), os.ModePerm)
 
@@ -185,7 +187,9 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 func judgeUserSubmitCode(job *solution.JudgeJob) int {
 	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
 	solutionOutputPath := path.Join(solutionPath, "output")
-	problemDataPath := path.Join(BasePath, "data", strconv.Itoa(job.Data.ProblemId))
+
+	dataPath := solution.GetSolutionDataPath(job.SourceID)
+	problemDataPath := path.Join(dataPath, strconv.Itoa(job.Data.ProblemId))
 
 	entries, err := os.ReadDir(problemDataPath)
 	if err != nil {

@@ -14,8 +14,9 @@ type SourceConfig struct {
 }
 
 type SolutionInstance struct {
-	ID     int
-	Source SolutionSource
+	ID              int
+	Source          SolutionSource
+	ProblemProvider AnyConfig
 }
 
 var InstancePool map[int]SolutionInstance
@@ -34,8 +35,9 @@ func createSolutionSource(config AnyConfig) SolutionSource {
 // 在内部创建并维护 reader/wiriter 列表
 func createSolutionInstance(config SourceConfig) {
 	instance := SolutionInstance{
-		ID:     InstanceNextID,
-		Source: createSolutionSource(config.ReaderAndWriterConfig),
+		ID:              InstanceNextID,
+		Source:          createSolutionSource(config.ReaderAndWriterConfig),
+		ProblemProvider: config.ProblemProvider,
 	}
 
 	InstancePool[InstanceNextID] = instance
@@ -47,6 +49,13 @@ func GetSolutionInstance(id int) *SolutionInstance {
 	ins := InstancePool[id]
 
 	return &ins
+}
+
+// 获取题目数据的 path
+func GetSolutionDataPath(id int) string {
+	ins := InstancePool[id]
+
+	return ins.ProblemProvider.Data["path"].(string)
 }
 
 func NewSolutionPool(config SourceConfig) {
