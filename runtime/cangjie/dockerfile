@@ -1,0 +1,12 @@
+FROM debian:bookworm-slim
+
+RUN mkdir /app
+ADD build.sh /app/build.sh
+ADD run.sh /app/run.sh
+RUN chmod +x /app/*.sh
+
+RUN apt-get update && apt-get install --no-install-recommends binutils libc-dev libc++-dev libgcc-12-dev -y
+RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+ADD https://cangjie-lang.cn/v1/files/auth/downLoad?nsId=142267&fileName=Cangjie-0.53.18-linux_x64.tar.gz&objectKey=67a2c8976a75297d1cdc1d4c /app/Cangjie-0.53.18-linux_x64.tar.gz
+RUN cd /app && tar -zxf /app/Cangjie-0.53.18-linux_x64.tar.gz && rm /app/Cangjie-0.53.18-linux_x64.tar.gz

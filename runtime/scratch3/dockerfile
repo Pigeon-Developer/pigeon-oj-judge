@@ -1,0 +1,9 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install --no-install-recommends scratch -y
+RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+RUN mkdir /app
+ADD build.sh /app/build.sh
+ADD run.sh /app/run.sh
+RUN chmod +x /app/*.sh
