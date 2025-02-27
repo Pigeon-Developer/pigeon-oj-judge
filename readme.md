@@ -12,3 +12,17 @@ todo list
 - [ ] 判题为每个用例记录 编译/执行/对比 的详细信息
 - [ ] 支持 hustoj udp 判题
 - [ ] 支持 hustoj redis 判题
+
+## 差异
+
+编译与运行的镜像一般采用下面两种方式构建
+
+- 语言官方维护的 debian 镜像
+- 尽可能的使用 debian bookworm 环境，安装 debian 源自带的对应语言的编译器
+
+部分语言的编译与执行同 hustoj 存在一定的差异，其中差异较大的为
+
+| 语言        | hustoj 处理方式           | pigeon-oj-judge 处理方式      |
+| ----------- | ------------------------- | ----------------------------- |
+| C#          | msc 编译，mono 执行       | dotnet cli 编译，直接执行产物 |
+| Objective-C | gcc 编译，带 GNUstep 环境 | clang 编译                    |

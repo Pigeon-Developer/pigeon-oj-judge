@@ -1,0 +1,14 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install --no-install-recommends gcc libncurses-dev -y
+RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+RUN mkdir /fb_install
+ADD http://downloads.sourceforge.net/project/fbc/FreeBASIC-1.10.1/Binaries-Linux/FreeBASIC-1.10.1-ubuntu-22.04-x86_64.tar.gz /fb_install
+RUN cd /fb_install && tar -zxf FreeBASIC-1.10.1-ubuntu-22.04-x86_64.tar.gz && cd FreeBASIC-1.10.1-ubuntu-22.04-x86_64 && ./install.sh -i
+RUN rm -rf /fb_install
+
+RUN mkdir /app
+ADD build.sh /app/build.sh
+ADD run.sh /app/run.sh
+RUN chmod +x /app/*.sh
