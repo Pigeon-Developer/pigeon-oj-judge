@@ -13,5 +13,13 @@
         "dsn": "root:testtest@tcp(127.0.0.1:3306)/jol?charset=utf8mb4&parseTime=True"
       }
     }
+  },
+  "builtin_runtime": {
+    "bash": true,
+    "c": true,
+    "cpp": true,
+    "clang": true,
+    "java": true,
+    "python": true
   }
 }
