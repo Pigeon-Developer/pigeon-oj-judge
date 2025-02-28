@@ -43,7 +43,18 @@ jobs:
           registry: ${{ env.cr_tcr }}
           username: ${{ secrets.TCR_USERNAME }}
           password: ${{ secrets.CR_TOKEN }}
-      - name: Build and push - c/cpp
+      - name: Build and push - c
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/c/dockerfile
+          context: ./runtime/c
+          push: true
+          tags: |
+            pigeonojdev/runtime-c:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-c:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-c:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-c:${{ github.event.inputs.version }}
+      - name: Build and push - cpp
         uses: docker/build-push-action@v6
         with:
           file: ./runtime/cpp/dockerfile
@@ -54,6 +65,50 @@ jobs:
             ${{ env.cr_coding }}/pigeon-oj/release/runtime-cpp:${{ github.event.inputs.version }}
             ${{ env.cr_acr }}/pigeon-oj/runtime-cpp:${{ github.event.inputs.version }}
             ${{ env.cr_tcr }}/pigeon-oj/runtime-cpp:${{ github.event.inputs.version }}
+      - name: Build and push - pascal
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/pascal/dockerfile
+          context: ./runtime/pascal
+          push: true
+          tags: |
+            pigeonojdev/runtime-pascal:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-pascal:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-pascal:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-pascal:${{ github.event.inputs.version }}
+      - name: Build and push - java
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/java/dockerfile
+          context: ./runtime/java
+          push: true
+          tags: |
+            pigeonojdev/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
+      - name: Build and push - ruby
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/ruby/dockerfile
+          context: ./runtime/ruby
+          push: true
+          tags: |
+            pigeonojdev/runtime-ruby:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-ruby:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-ruby:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-ruby:${{ github.event.inputs.version }}
+      - name: Build and push - bash
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/bash/dockerfile
+          context: ./runtime/bash
+          push: true
+          tags: |
+            pigeonojdev/runtime-bash:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-bash:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-bash:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-bash:${{ github.event.inputs.version }}
       - name: Build and push - python
         uses: docker/build-push-action@v6
         with:
@@ -65,14 +120,168 @@ jobs:
             ${{ env.cr_coding }}/pigeon-oj/release/runtime-python:${{ github.event.inputs.version }}
             ${{ env.cr_acr }}/pigeon-oj/runtime-python:${{ github.event.inputs.version }}
             ${{ env.cr_tcr }}/pigeon-oj/runtime-python:${{ github.event.inputs.version }}
-      - name: Build and push - java
+      - name: Build and push - php
         uses: docker/build-push-action@v6
         with:
-          file: ./runtime/python/dockerfile
-          context: ./runtime/java
+          file: ./runtime/php/dockerfile
+          context: ./runtime/php
           push: true
           tags: |
-            pigeonojdev/runtime-java:${{ github.event.inputs.version }}
-            ${{ env.cr_coding }}/pigeon-oj/release/runtime-java:${{ github.event.inputs.version }}
-            ${{ env.cr_acr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
-            ${{ env.cr_tcr }}/pigeon-oj/runtime-java:${{ github.event.inputs.version }}
+            pigeonojdev/runtime-php:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-php:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-php:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-php:${{ github.event.inputs.version }}
+      - name: Build and push - perl
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/perl/dockerfile
+          context: ./runtime/perl
+          push: true
+          tags: |
+            pigeonojdev/runtime-perl:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-perl:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-perl:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-perl:${{ github.event.inputs.version }}
+      - name: Build and push - csharp
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/csharp/dockerfile
+          context: ./runtime/csharp
+          push: true
+          tags: |
+            pigeonojdev/runtime-csharp:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-csharp:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-csharp:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-csharp:${{ github.event.inputs.version }}
+      - name: Build and push - freebasic
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/freebasic/dockerfile
+          context: ./runtime/freebasic
+          push: true
+          tags: |
+            pigeonojdev/runtime-freebasic:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-freebasic:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-freebasic:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-freebasic:${{ github.event.inputs.version }}
+      - name: Build and push - scheme
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/scheme/dockerfile
+          context: ./runtime/scheme
+          push: true
+          tags: |
+            pigeonojdev/runtime-scheme:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-scheme:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-scheme:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-scheme:${{ github.event.inputs.version }}
+      - name: Build and push - lua
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/lua/dockerfile
+          context: ./runtime/lua
+          push: true
+          tags: |
+            pigeonojdev/runtime-lua:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-lua:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-lua:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-lua:${{ github.event.inputs.version }}
+      - name: Build and push - javascript
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/javascript/dockerfile
+          context: ./runtime/javascript
+          push: true
+          tags: |
+            pigeonojdev/runtime-javascript:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-javascript:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-javascript:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-javascript:${{ github.event.inputs.version }}
+      - name: Build and push - golang
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/golang/dockerfile
+          context: ./runtime/golang
+          push: true
+          tags: |
+            pigeonojdev/runtime-golang:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-golang:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-golang:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-golang:${{ github.event.inputs.version }}
+      - name: Build and push - fortran
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/fortran/dockerfile
+          context: ./runtime/fortran
+          push: true
+          tags: |
+            pigeonojdev/runtime-fortran:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-fortran:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-fortran:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-fortran:${{ github.event.inputs.version }}
+      - name: Build and push - matlab
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/matlab/dockerfile
+          context: ./runtime/matlab
+          push: true
+          tags: |
+            pigeonojdev/runtime-matlab:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-matlab:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-matlab:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-matlab:${{ github.event.inputs.version }}
+      - name: Build and push - cobol
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/cobol/dockerfile
+          context: ./runtime/cobol
+          push: true
+          tags: |
+            pigeonojdev/runtime-cobol:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-cobol:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-cobol:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-cobol:${{ github.event.inputs.version }}
+      - name: Build and push - r
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/r/dockerfile
+          context: ./runtime/r
+          push: true
+          tags: |
+            pigeonojdev/runtime-r:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-r:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-r:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-r:${{ github.event.inputs.version }}
+      - name: Build and push - scratch3
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/scratch3/dockerfile
+          context: ./runtime/scratch3
+          push: true
+          tags: |
+            pigeonojdev/runtime-scratch3:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-scratch3:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-scratch3:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-scratch3:${{ github.event.inputs.version }}
+      - name: Build and push - cangjie
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/cangjie/dockerfile
+          context: ./runtime/cangjie
+          push: true
+          tags: |
+            pigeonojdev/runtime-cangjie:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-cangjie:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-cangjie:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-cangjie:${{ github.event.inputs.version }}
+      - name: Build and push - clang
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/clang/dockerfile
+          context: ./runtime/clang
+          push: true
+          tags: |
+            pigeonojdev/runtime-clang:${{ github.event.inputs.version }}
+            ${{ env.cr_coding }}/pigeon-oj/release/runtime-clang:${{ github.event.inputs.version }}
+            ${{ env.cr_acr }}/pigeon-oj/runtime-clang:${{ github.event.inputs.version }}
+            ${{ env.cr_tcr }}/pigeon-oj/runtime-clang:${{ github.event.inputs.version }}

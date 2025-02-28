@@ -20,6 +20,7 @@ var (
 	RuntimeRegistry = make(map[int]ImageConfig)
 	LanguageMap     = make(map[int]string)
 	LangMap         = make(map[string]int)
+	SimpleLangList  = make([]int, 0, 32)
 )
 
 func init() {
@@ -85,7 +86,7 @@ func init() {
 	LangMap["scratch3"] = Language_scratch3
 	LangMap["cangjie"] = Language_cangjie
 
-	list := []int{
+	SimpleLangList = append(SimpleLangList,
 		// 1
 		Language_c,
 		Language_cpp,
@@ -117,12 +118,11 @@ func init() {
 		Language_cobol,
 		Language_r,
 		Language_scratch3,
-		Language_cangjie,
-	}
+		Language_cangjie)
 
 	CurrentTag := "0.0.0-alpha.0"
 
-	for _, v := range list {
+	for _, v := range SimpleLangList {
 		RuntimeRegistry[v] = ImageConfig{
 			BuildCmd: "/app/build.sh",
 			RunCmd:   "/app/run.sh",
