@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -21,10 +22,11 @@ import (
 )
 
 type RunResult struct {
-	// 程序的退出 code
-	StatusCode int
-	Stdout     string
-	Stderr     string
+	ExitCode    int
+	Stdout      string
+	Stderr      string
+	MemoryUsage int
+	TimeCost    int
 }
 
 const BasePath = "/etc/pigeon-oj-judge"
@@ -41,9 +43,9 @@ func writeFile(filePath string, content string) {
 
 func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int) RunResult {
 	ret := RunResult{
-		StatusCode: 0,
-		Stdout:     "",
-		Stderr:     "",
+		ExitCode: 0,
+		Stdout:   "",
+		Stderr:   "",
 	}
 
 	ctx := context.Background()
@@ -76,7 +78,7 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		}
 	case result := <-statusCh:
 		{
-			ret.StatusCode = int(result.StatusCode)
+			ret.ExitCode = int(result.StatusCode)
 		}
 	}
 
@@ -98,6 +100,21 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 
 	ret.Stdout = stdout.String()
 	ret.Stderr = stderr.String()
+
+	stats, err := cli.ContainerStatsOneShot(ctx, resp.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	var statsData container.StatsResponse
+
+	dec := json.NewDecoder(stats.Body)
+	if err := dec.Decode((&statsData)); err != nil {
+		panic(err)
+	}
+
+	ret.MemoryUsage = int(statsData.MemoryStats.MaxUsage)
+	ret.TimeCost = int(statsData.CPUStats.CPUUsage.TotalUsage)
 
 	cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 
@@ -126,7 +143,9 @@ func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 }
 
 // 运行用户提交，使用测试数据中 in 得到用户的 out
-func runUserSubmitCode(job *solution.JudgeJob) {
+func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
+	ret := make(map[string]UserCodeRunResult, 0)
+
 	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
 
 	dataPath := solution.GetSolutionDataPath(job.SourceID)
@@ -160,7 +179,7 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 		runTimeLimit := int(math.Ceil(job.Data.TimeLimit))
 
 		runtimeConfig := RuntimeRegistry[job.Data.Language]
-		runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
+		runResult := runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
 			{
 				ReadOnly: false,
 				Type:     mount.TypeBind,
@@ -180,11 +199,28 @@ func runUserSubmitCode(job *solution.JudgeJob) {
 				Target:   "/app/data.out",
 			},
 		}, runTimeLimit)
+
+		ret[e.Name()] = UserCodeRunResult{
+			ExitCode:    runResult.ExitCode,
+			MemoryUsage: runResult.MemoryUsage,
+			TimeCost:    runResult.TimeCost,
+			Stdout:      runResult.Stdout,
+			Stderr:      runResult.Stderr,
+			Match:       -1,
+		}
 	}
+
+	return ret
 }
 
 // 判断用户输出是否与数据一致
-func judgeUserSubmitCode(job *solution.JudgeJob) int {
+func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRunResult) int {
+	for _, v := range runResult {
+		if v.ExitCode != 0 {
+			return solution.Result_RE
+		}
+	}
+
 	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
 	solutionOutputPath := path.Join(solutionPath, "output")
 
@@ -260,10 +296,10 @@ func judgeUserSubmitCode(job *solution.JudgeJob) int {
 func JudgeUserSubmit(job *solution.JudgeJob) int {
 	job.UpdateResult(solution.Result_CI)
 	compileResult := buildUserSubmitCode(job)
-	if compileResult.StatusCode != 0 {
+	if compileResult.ExitCode != 0 {
 		return solution.Result_CE
 	}
 	job.UpdateResult(solution.Result_RJ)
-	runUserSubmitCode(job)
-	return judgeUserSubmitCode(job)
+	runResult := runUserSubmitCode(job)
+	return judgeUserSubmitCode(job, runResult)
 }

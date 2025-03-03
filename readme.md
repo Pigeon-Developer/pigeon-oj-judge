@@ -9,7 +9,8 @@ todo list
 
 - [ ] 为现在 hustoj 在 debian12 下支持的每个语言构建镜像
   - [ ] sql
-- [ ] 判题为每个用例记录 编译/执行/对比 的详细信息
+- [ ] 增加执行异常的信息
+  - [ ] 构建/执行时 CPU/内存/IO 超过限制
 - [ ] 支持 hustoj udp 判题
 - [ ] 支持 hustoj redis 判题
 
