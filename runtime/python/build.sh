@@ -1,5 +1,5 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-cp /app/source_code /app/build_result/source_code.py
-python -O -m py_compile /app/build_result/source_code.py
+
+cp /mount/source-code/user_code /mount/artifacts/source_code.py
+python -O -m py_compile /mount/artifacts/source_code.py

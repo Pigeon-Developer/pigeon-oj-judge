@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-gcc /app/source_code -std=c17 -lm -DONLINE_JUDG -fmax-errors=10 -o /app/build_result/main.bin
+cp /mount/source-code/user_code /tmp/source_code.c
+gcc /tmp/source_code.c -std=c17 -lm -DONLINE_JUDG -fmax-errors=10 -o /mount/artifacts/main.bin

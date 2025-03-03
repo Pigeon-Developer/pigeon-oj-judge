@@ -1,3 +1,3 @@
 #! /usr/bin/bash
 
-cat /app/data.in | php /app/build_result/source_code.php > /app/data.out
+cat /app/data.in | php /mount/artifacts/source_code.php > /app/data.out

@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-clang-19 /app/source_code -ObjC -o /app/build_result/main.bin
+cp /mount/source-code/user_code /tmp/source_code.oc
+clang-19 /tmp/source_code.oc -ObjC -o /mount/artifacts/main.bin

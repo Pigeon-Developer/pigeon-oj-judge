@@ -1,5 +1,5 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-cp /app/source_code /app/source_code.f95
-f95 -o /app/build_result/main.bin /app/source_code.f95
+
+cp /mount/source-code/user_code /tmp/source_code.f95
+f95 -o /mount/artifacts/main.bin /tmp/source_code.f95

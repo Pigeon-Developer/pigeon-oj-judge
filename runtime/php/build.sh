@@ -1,5 +1,5 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-cp /app/source_code /app/build_result/source_code.php
-php -l /app/build_result/source_code.php
+
+cp /mount/source-code/user_code /mount/artifacts/source_code.php
+php -l /mount/artifacts/source_code.php

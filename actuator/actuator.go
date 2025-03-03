@@ -42,16 +42,16 @@ func writeFile(filePath string, content string) {
 	file.WriteString(content)
 }
 
-func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int) RunResult {
+func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int) RunResult {
 	ret := RunResult{
 		ExitCode: 0,
 		Stdout:   "",
 		Stderr:   "",
 	}
 
-	// 这里假设所有操作都能在 60s 内完成
+	// 这里假设所有操作都能在 (timeLimit+5)s 内完成
 	// @TODO 每个语言允许配置编译耗时
-	buildTimeout := 60 * time.Second
+	buildTimeout := time.Duration((timeLimit + 5) * int(time.Second))
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout)
 	defer cancel()
 
@@ -142,18 +142,25 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 // 编译代码
 func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 	solutionPath := path.Join(BasePath, "solution", strconv.Itoa(job.Data.SolutionId))
+	artifactPath := path.Join(solutionPath, "artifacts")
 
 	os.MkdirAll(solutionPath, os.ModePerm)
-	writeFile(path.Join(solutionPath, "main.c"), job.Data.Code)
+	os.MkdirAll(artifactPath, os.ModePerm)
+	writeFile(path.Join(solutionPath, "source_code"), job.Data.Code)
 
 	buildTimeLimit := 5
 
 	runtimeConfig := RuntimeRegistry[job.Data.Language]
-	ret := runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.BuildCmd}, []mount.Mount{
+	ret := RunInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.BuildCmd}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: solutionPath,
-			Target: "/app",
+			Target: "/mount/source-code",
+		},
+		{
+			Type:   mount.TypeBind,
+			Source: artifactPath,
+			Target: "/mount/artifacts",
 		},
 	}, buildTimeLimit)
 
@@ -187,7 +194,7 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 
 		inDataPath := path.Join(problemDataPath, e.Name())
 		outDataPath := path.Join(solutionPath, "output", strings.Replace(e.Name(), ".in", ".out", 1))
-		buildResultPath := path.Join(solutionPath, "build_result")
+		artifactPath := path.Join(solutionPath, "artifacts")
 
 		_, err := os.Create(outDataPath)
 		if err != nil {
@@ -197,12 +204,12 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 		runTimeLimit := int(math.Ceil(job.Data.TimeLimit))
 
 		runtimeConfig := RuntimeRegistry[job.Data.Language]
-		runResult := runInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
+		runResult := RunInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
 			{
 				ReadOnly: false,
 				Type:     mount.TypeBind,
-				Source:   buildResultPath,
-				Target:   "/app/build_result",
+				Source:   artifactPath,
+				Target:   "/mount/artifacts",
 			},
 			{
 				ReadOnly: true,

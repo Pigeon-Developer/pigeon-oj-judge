@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
+
 cd /app
-cp source_code main.go
-go build -o /app/build_result/main.bin main.go
+cp /mount/source-code/user_code /tmp/main.go
+go build -o /mount/artifacts/main.bin /tmp/main.go

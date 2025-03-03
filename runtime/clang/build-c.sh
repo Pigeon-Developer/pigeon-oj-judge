@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-clang-19 /app/source_code -std=c17 -o /app/build_result/main.bin
+cp /mount/source-code/user_code /tmp/source_code.c
+clang-19 /tmp/source_code.c -std=c17 -o /mount/artifacts/main.bin

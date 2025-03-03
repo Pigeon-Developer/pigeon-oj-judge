@@ -1,3 +1,3 @@
 #! /usr/bin/bash
 
-cat /app/data.in | /app/build_result/main.bin > /app/data.out
+cat /app/data.in | /mount/artifacts/main.bin > /app/data.out

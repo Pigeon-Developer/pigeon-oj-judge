@@ -1,5 +1,5 @@
 #! /usr/bin/bash
 
-mkdir -p /app/build_result
-fpc /app/source_code -Cs32000000 -Sh -O2 -Co -Ct -Ci -o/app/build_result/main.bin
+cp /mount/source-code/user_code /tmp/source_code.pas
+fpc /tmp/source_code.pas -Cs32000000 -Sh -O2 -Co -Ct -Ci -o/mount/artifacts/main.bin
 

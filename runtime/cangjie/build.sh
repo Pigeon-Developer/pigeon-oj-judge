@@ -1,5 +1,6 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
+
 source /app/cangjie/envsetup.sh
-cjc --diagnostic-format noColor -o /app/build_result/main.bin /app/source_code
+cp /mount/source-code/user_code /tmp/source_code.cj
+cjc --diagnostic-format noColor -o /mount/artifacts/main.bin /tmp/source_code.cj

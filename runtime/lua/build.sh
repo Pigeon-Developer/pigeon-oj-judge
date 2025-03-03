@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-luac -o /app/build_result/source_code.luac /app/source_code
+cp /mount/source-code/user_code /tmp/source_code.lua
+luac -o /mount/artifacts/source_code.luac /tmp/source_code.lua

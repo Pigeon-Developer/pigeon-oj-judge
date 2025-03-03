@@ -1,5 +1,5 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-cp /app/source_code /app/build_result/source_code.sb3
-scratch-run --check /app/build_result/source_code.sb3
+
+cp /mount/source-code/user_code /mount/artifacts/source_code.sb3
+scratch-run --check /mount/artifacts/source_code.sb3

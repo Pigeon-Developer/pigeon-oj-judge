@@ -1,5 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-ruby -c /app/source_code
-cp /app/source_code /app/build_result/source_code.rb
+cp /mount/source-code/user_code /mount/artifacts/source_code.rb
+ruby -c /mount/artifacts/source_code.rb

@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-mkdir /app/build_result
-cp /app/source_code /app/build_result/source_code.m
+
+cp /mount/source-code/user_code /mount/artifacts/source_code.m

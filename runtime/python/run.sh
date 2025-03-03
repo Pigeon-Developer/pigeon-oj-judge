@@ -1,3 +1,3 @@
 #! /usr/bin/bash
 
-cat /app/data.in | python /app/build_result/source_code.py > /app/data.out
+cat /app/data.in | python /mount/artifacts/source_code.py > /app/data.out
