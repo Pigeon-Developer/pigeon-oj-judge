@@ -12,6 +12,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -48,11 +49,19 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		Stderr:   "",
 	}
 
-	ctx := context.Background()
+	// 这里假设所有操作都能在 60s 内完成
+	// @TODO 每个语言允许配置编译耗时
+	buildTimeout := 60 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout)
+	defer cancel()
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
+
+	// 默认使用 1G 的内存限制
+	memoryLimit := int64(1 * 1024 * 1024 * 1024)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		NetworkDisabled: true,
@@ -61,6 +70,10 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		Cmd:             cmd,
 	}, &container.HostConfig{
 		Mounts: mounts,
+		Resources: container.Resources{
+			Memory:     memoryLimit,
+			MemorySwap: memoryLimit,
+		},
 	}, nil, nil, "")
 	if err != nil {
 		panic(err)
@@ -69,6 +82,11 @@ func runInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		panic(err)
 	}
+
+	// 超时时停止容器
+	time.AfterFunc(buildTimeout, func() {
+		cli.ContainerStop(context.Background(), resp.ID, container.StopOptions{})
+	})
 
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {

@@ -13,6 +13,7 @@ todo list
   - [ ] 构建/执行时 CPU/内存/IO 超过限制
 - [ ] 支持 hustoj udp 判题
 - [ ] 支持 hustoj redis 判题
+- [ ] 构建/执行时的 CPU/内存/IO 限制可以使用配置文件
 
 ## 差异
 
