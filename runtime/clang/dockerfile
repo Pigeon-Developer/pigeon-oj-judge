@@ -7,5 +7,6 @@ RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,
 RUN mkdir /app
 ADD build-c.sh /app/build-c.sh
 ADD build-cpp.sh /app/build-cpp.sh
+ADD build-objectivec.sh /app/build-objectivec.sh
 ADD run.sh /app/run.sh
 RUN chmod +x /app/*.sh

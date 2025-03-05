@@ -1,4 +1,4 @@
 #! /usr/bin/bash
 
-cd /app/build_result
+cd /mount/artifacts
 cat /app/data.in | java Main > /app/data.out
