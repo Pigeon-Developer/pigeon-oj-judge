@@ -18,6 +18,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/google/uuid"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
 )
@@ -26,8 +27,8 @@ type RunResult struct {
 	ExitCode    int
 	Stdout      string
 	Stderr      string
-	MemoryUsage int
-	TimeCost    int
+	MemoryUsage int // 单位 bytes
+	TimeCost    int // 单位 ms
 }
 
 const BasePath = "/etc/pigeon-oj-judge"
@@ -49,9 +50,16 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		Stderr:   "",
 	}
 
+	cgroup, err := NewCgroupWrap(uuid.New().String())
+	if err != nil {
+		panic(err)
+	}
+	defer cgroup.Cgroup.Delete()
+
+	stopTimeout := 5
 	// 这里假设所有操作都能在 (timeLimit+5)s 内完成
 	// @TODO 每个语言允许配置编译耗时
-	buildTimeout := time.Duration((timeLimit + 5) * int(time.Second))
+	buildTimeout := time.Duration((timeLimit + stopTimeout) * int(time.Second))
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout)
 	defer cancel()
 
@@ -61,18 +69,48 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	}
 
 	// 默认使用 1G 的内存限制
-	memoryLimit := int64(1 * 1024 * 1024 * 1024)
+	size1G := int64(1 * 1024 * 1024 * 1024)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		NetworkDisabled: true,
-		StopTimeout:     &timeLimit,
+		StopTimeout:     &stopTimeout,
 		Image:           image,
 		Cmd:             cmd,
 	}, &container.HostConfig{
 		Mounts: mounts,
 		Resources: container.Resources{
-			Memory:     memoryLimit,
-			MemorySwap: memoryLimit,
+			CgroupParent: cgroup.Path,
+			Memory:       size1G,
+			MemorySwap:   size1G,
+			// @TODO 这里应该均匀的分配核心
+			CpusetCpus: "0",
+			Ulimits: []*container.Ulimit{
+				{
+					Name: "rss",
+					Hard: size1G,
+					Soft: size1G,
+				},
+				{
+					Name: "stack",
+					Hard: size1G,
+					Soft: size1G,
+				},
+				{
+					Name: "data",
+					Hard: size1G,
+					Soft: size1G,
+				},
+				{
+					Name: "fsize",
+					Hard: size1G,
+					Soft: size1G,
+				},
+				{
+					Name: "nice",
+					Hard: -1,
+					Soft: -1,
+				},
+			},
 		},
 	}, nil, nil, "")
 	if err != nil {
@@ -119,20 +157,20 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	ret.Stdout = stdout.String()
 	ret.Stderr = stderr.String()
 
-	stats, err := cli.ContainerStatsOneShot(ctx, resp.ID)
+	stat, err := cgroup.Cgroup.Stat()
 	if err != nil {
 		panic(err)
 	}
 
-	var statsData container.StatsResponse
-
-	dec := json.NewDecoder(stats.Body)
-	if err := dec.Decode((&statsData)); err != nil {
+	statJSON, err := json.Marshal(stat)
+	if err != nil {
 		panic(err)
+	} else {
+		fmt.Printf("cgroup.stat: %s\n", statJSON)
 	}
 
-	ret.MemoryUsage = int(statsData.MemoryStats.MaxUsage)
-	ret.TimeCost = int(statsData.CPUStats.CPUUsage.TotalUsage)
+	ret.MemoryUsage = int(stat.Memory.GetMaxUsage())
+	ret.TimeCost = int(stat.CPU.GetUsageUsec() / 1000)
 
 	cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
 

@@ -52,7 +52,8 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func main() {
+// 测试会引起 runtime 异常的代码
+func testRumtimeErrorCode() {
 	os.RemoveAll("/tmp/pj-run-code")
 	os.MkdirAll("/tmp/pj-run-code", os.ModePerm)
 	cmd := exec.Command("bash", "-c", "cd /tmp/pj-run-code && git clone https://github.com/vijos/malicious-code.git")
@@ -76,23 +77,30 @@ func main() {
 
 		imageName := ""
 		if strings.HasSuffix(v.Name(), ".cpp") {
-			// imageName = "pigeonojdev/runtime-cpp"
-			imageName = "rt-cpp"
+			imageName = "pigeonojdev/runtime-cpp"
 		} else if strings.HasSuffix(v.Name(), ".c") {
-			// imageName = "pigeonojdev/runtime-c"
-			imageName = "rt-c"
+			imageName = "pigeonojdev/runtime-c"
 		} else if strings.HasSuffix(v.Name(), ".py") {
-			// imageName = "pigeonojdev/runtime-python"
-			imageName = "rt-py"
+			imageName = "pigeonojdev/runtime-python"
 		} else {
 			continue
 		}
+		// if strings.HasSuffix(v.Name(), ".cpp") {
+		// 	imageName = "rt-cpp"
+		// } else if strings.HasSuffix(v.Name(), ".c") {
+		// 	imageName = "rt-c"
+		// } else if strings.HasSuffix(v.Name(), ".py") {
+		// 	imageName = "rt-py"
+		// } else {
+		// 	continue
+		// }
 
 		copyFile(path.Join("/tmp/pj-run-code/malicious-code", v.Name()), path.Join("/tmp/pj-run-code/source-code", "user_code"))
 
-		image := imageName
+		// image := imageName
+		image := imageName + ":0.0.0-alpha.2"
 		fmt.Printf("use %s test %s\n", image, v.Name())
-		compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "ls -alh /mount/source-code"}, []mount.Mount{
+		compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
 			{
 				Type:   mount.TypeBind,
 				Source: "/tmp/pj-run-code/source-code",
@@ -109,6 +117,16 @@ func main() {
 	}
 }
 
-// docker pull pigeonojdev/runtime-cpp:0.0.0-alpha.1
-// docker pull pigeonojdev/runtime-c:0.0.0-alpha.1
-// docker pull pigeonojdev/runtime-python:0.0.0-alpha.1
+// 测试资源消耗的收集
+func testResourceCollect() {
+
+}
+
+func main() {
+	testRumtimeErrorCode()
+	testResourceCollect()
+}
+
+// docker pull pigeonojdev/runtime-cpp:0.0.0-alpha.2
+// docker pull pigeonojdev/runtime-c:0.0.0-alpha.2
+// docker pull pigeonojdev/runtime-python:0.0.0-alpha.2
