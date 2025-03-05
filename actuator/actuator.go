@@ -126,7 +126,8 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		cli.ContainerStop(context.Background(), resp.ID, container.StopOptions{})
 	})
 
-	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	// 因为上面超时会暂停，所以这里不需要设置超时
+	statusCh, errCh := cli.ContainerWait(context.Background(), resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -138,7 +139,9 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		}
 	}
 
-	out, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
+	getLogCtx, cancelLogCtx := context.WithTimeout(context.Background(), buildTimeout)
+	defer cancelLogCtx()
+	out, err := cli.ContainerLogs(getLogCtx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		panic(err)
 	}
@@ -172,7 +175,9 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	ret.MemoryUsage = int(stat.Memory.GetMaxUsage())
 	ret.TimeCost = int(stat.CPU.GetUsageUsec() / 1000)
 
-	cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{})
+	removeCtx, cancelRemoveCtx := context.WithTimeout(context.Background(), buildTimeout)
+	defer cancelRemoveCtx()
+	cli.ContainerRemove(removeCtx, resp.ID, container.RemoveOptions{})
 
 	return ret
 }
