@@ -120,7 +120,7 @@ func init() {
 		Language_scratch3,
 		Language_cangjie)
 
-	CurrentTag := "0.0.0-alpha.0"
+	CurrentTag := "0.0.0-alpha.3"
 
 	for _, v := range SimpleLangList {
 		RuntimeRegistry[v] = ImageConfig{
