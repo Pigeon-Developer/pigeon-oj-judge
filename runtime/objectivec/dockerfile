@@ -1,12 +1,11 @@
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install --no-install-recommends libc6-dev -y
-RUN apt-get install --no-install-recommends clang-19 libobjc-12-dev -y
+RUN apt-get install --no-install-recommends clang-19 -y
+RUN apt-get install --no-install-recommends gnustep gnustep-devel libgnustep-base-dev libobjc-12-dev -y
 RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 RUN mkdir /app
-ADD build-c.sh /app/build-c.sh
-ADD build-cpp.sh /app/build-cpp.sh
-ADD build-objectivec.sh /app/build-objectivec.sh
+ADD build.sh /app/build.sh
 ADD run.sh /app/run.sh
 RUN chmod +x /app/*.sh

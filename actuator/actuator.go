@@ -86,24 +86,19 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 			CpusetCpus: "0",
 			Ulimits: []*container.Ulimit{
 				{
-					Name: "rss",
-					Hard: size1G,
-					Soft: size1G,
-				},
-				{
-					Name: "stack",
-					Hard: size1G,
-					Soft: size1G,
-				},
-				{
-					Name: "data",
-					Hard: size1G,
-					Soft: size1G,
+					Name: "cpu",
+					Hard: int64(timeLimit),
+					Soft: int64(timeLimit),
 				},
 				{
 					Name: "fsize",
 					Hard: size1G,
 					Soft: size1G,
+				},
+				{
+					Name: "nproc",
+					Hard: 1024,
+					Soft: 1024,
 				},
 				{
 					Name: "nice",

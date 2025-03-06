@@ -14,7 +14,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-const RuntimeImageTag = ":0.0.0-alpha.3"
+const RuntimeImageTag = ":0.0.0-alpha.4"
 
 func writeFile(filePath string, content string) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
