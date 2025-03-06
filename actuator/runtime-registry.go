@@ -100,7 +100,7 @@ func init() {
 		Language_perl,
 		Language_csharp,
 		// 3
-		// objectivec
+		Language_objectivec,
 		Language_freebasic,
 		Language_scheme,
 		// clang
@@ -120,7 +120,7 @@ func init() {
 		Language_scratch3,
 		Language_cangjie)
 
-	CurrentTag := "0.0.0-alpha.3"
+	CurrentTag := "0.0.0-alpha.5"
 
 	for _, v := range SimpleLangList {
 		RuntimeRegistry[v] = ImageConfig{
@@ -130,7 +130,7 @@ func init() {
 		}
 	}
 
-	// 下面三个语言共享一个镜像
+	// 下面两个语言共享一个镜像
 	RuntimeRegistry[Language_clang] = ImageConfig{
 		BuildCmd: "/app/build-c.sh",
 		RunCmd:   "/app/run.sh",
@@ -138,11 +138,6 @@ func init() {
 	}
 	RuntimeRegistry[Language_clangpp] = ImageConfig{
 		BuildCmd: "/app/build-cpp.sh",
-		RunCmd:   "/app/run.sh",
-		Image:    "pigeonojdev/runtime-clang:" + CurrentTag,
-	}
-	RuntimeRegistry[Language_objectivec] = ImageConfig{
-		BuildCmd: "/app/build-objectivec.sh",
 		RunCmd:   "/app/run.sh",
 		Image:    "pigeonojdev/runtime-clang:" + CurrentTag,
 	}
