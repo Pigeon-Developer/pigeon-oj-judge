@@ -276,6 +276,45 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 	return ret
 }
 
+func CompareLineByLine(file1, file2 string) bool {
+	f1, err := os.Open(file1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f1.Close()
+
+	f2, err := os.Open(file2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f2.Close()
+
+	scanner1 := bufio.NewScanner(f1)
+	scanner2 := bufio.NewScanner(f2)
+
+	for {
+		leftHasData := scanner1.Scan()
+		rightHasData := scanner2.Scan()
+
+		if leftHasData && rightHasData {
+			l := scanner1.Text()
+			r := scanner2.Text()
+			if l != r {
+				return false
+			} else {
+				continue
+			}
+		}
+
+		if !leftHasData && !rightHasData {
+			return true
+		}
+
+		// @TODO 这里需要看看剩余的字符是否全为 \n
+		return false
+	}
+}
+
 // 判断用户输出是否与数据一致
 func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRunResult) int {
 	for _, v := range runResult {
@@ -309,42 +348,13 @@ func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRu
 			continue
 		}
 
-		//
 		systemOutput := path.Join(problemDataPath, e.Name())
 		userOutput := path.Join(solutionOutputPath, e.Name())
 
-		systemFile, err := os.Open(systemOutput)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer systemFile.Close()
-
-		userFile, err := os.Open(userOutput)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer userFile.Close()
-
-		systemScanner := bufio.NewScanner(systemFile)
-		userScanner := bufio.NewScanner(userFile)
-
-		isMatch := true
-		// optionally, resize scanner's capacity for lines over 64K, see next example
-		for systemScanner.Scan() {
-			userScanner.Scan()
-
-			if systemScanner.Text() != userScanner.Text() {
-				isMatch = false
-				break
-			}
-		}
+		isMatch := CompareLineByLine(systemOutput, userOutput)
 
 		result[e.Name()] = isMatch
 		isAllMatch = isAllMatch && isMatch
-
-		if err := systemScanner.Err(); err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	fmt.Printf("用户的答案是否正确 %v \n", result)

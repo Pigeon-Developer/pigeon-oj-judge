@@ -123,6 +123,14 @@ jobs:
           push: true
           tags: |
             pigeonojdev/runtime-csharp:${{ github.event.inputs.version }}
+      - name: Build and push - objectivec
+        uses: docker/build-push-action@v6
+        with:
+          file: ./runtime/objectivec/dockerfile
+          context: ./runtime/objectivec
+          push: true
+          tags: |
+            pigeonojdev/runtime-objectivec:${{ github.event.inputs.version }}
       - name: Build and push - freebasic
         uses: docker/build-push-action@v6
         with:

@@ -14,7 +14,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-const RuntimeImageTag = ":0.0.0-alpha.4"
+const RuntimeImageTag = ":0.0.0-alpha.6"
 
 func writeFile(filePath string, content string) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
@@ -154,6 +154,96 @@ func testRumtimeErrorCode() {
 	}
 }
 
+func runTestLang(langPath, image, buildCmd string) {
+	if buildCmd == "" {
+		buildCmd = "/app/build.sh"
+	}
+	files, _ := os.ReadDir(langPath)
+	codeFile := ""
+	for _, file := range files {
+		codeFile = file.Name()
+	}
+
+	copyFile(path.Join(langPath, codeFile), "/tmp/pj-run-code/source-code/user_code")
+
+	buildAndRun("", image, buildCmd)
+}
+
+func runTest(testPath string) {
+	langs, _ := os.ReadDir(testPath)
+
+	inFile := ""
+	outFile := ""
+
+	for _, lang := range langs {
+		if lang.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(lang.Name(), ".in") {
+			inFile = lang.Name()
+		}
+		if strings.HasSuffix(lang.Name(), ".out") {
+			outFile = lang.Name()
+		}
+	}
+
+	for _, lang := range langs {
+		if !lang.IsDir() {
+			continue
+		}
+
+		_, hasLang := actuator.LangMap[lang.Name()]
+
+		if !hasLang {
+			continue
+		}
+
+		os.RemoveAll("/tmp/pj-run-code/source-code")
+		os.RemoveAll("/tmp/pj-run-code/artifacts")
+		os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+		os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+
+		langPath := testPath + "/" + lang.Name()
+		copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
+		writeFile("/tmp/pj-run-code/test.out", "")
+
+		fmt.Printf("test %s\n", lang.Name())
+		runTestLang(langPath, "pigeonojdev/runtime-"+lang.Name()+RuntimeImageTag, "")
+
+		fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+	}
+
+	// 测试 clang c
+	os.RemoveAll("/tmp/pj-run-code/source-code")
+	os.RemoveAll("/tmp/pj-run-code/artifacts")
+	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+
+	langPathC := testPath + "/" + "c"
+	copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
+	writeFile("/tmp/pj-run-code/test.out", "")
+
+	fmt.Printf("test clang-c\n")
+	runTestLang(langPathC, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-c.sh")
+
+	fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+
+	// 测试 clang cpp
+	os.RemoveAll("/tmp/pj-run-code/source-code")
+	os.RemoveAll("/tmp/pj-run-code/artifacts")
+	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+
+	langPathCpp := testPath + "/" + "cpp"
+	copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
+	writeFile("/tmp/pj-run-code/test.out", "")
+
+	fmt.Printf("test clang-cpp\n")
+	runTestLang(langPathCpp, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-cpp.sh")
+
+	fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+}
+
 // 测试资源消耗的收集
 func testResourceCollect() {
 	os.RemoveAll("/tmp/pj-run-code")
@@ -168,47 +258,13 @@ func testResourceCollect() {
 		return
 	}
 
-	writeFile("/tmp/pj-run-code/test.in", "1 2")
-
 	// 先来测试基础代码
 	codeBase := "/tmp/pj-run-code/language-test-code"
-	langs, _ := os.ReadDir(codeBase + "/runtime")
-	for _, lang := range langs {
-		_, hasLang := actuator.LangMap[lang.Name()]
-		isClang := strings.HasPrefix(lang.Name(), "clang-")
+	tests, _ := os.ReadDir(codeBase + "/tests")
 
-		if !isClang && !hasLang {
-			continue
-		}
-
-		files, _ := os.ReadDir(codeBase + "/runtime/" + lang.Name())
-		for _, file := range files {
-			os.RemoveAll("/tmp/pj-run-code/source-code")
-			os.RemoveAll("/tmp/pj-run-code/artifacts")
-			os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-			os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-			writeFile("/tmp/pj-run-code/test.out", "")
-
-			imageName := "pigeonojdev/runtime-" + lang.Name()
-			if isClang {
-				imageName = "pigeonojdev/runtime-clang"
-			}
-
-			copyFile(path.Join(codeBase, "runtime", lang.Name(), file.Name()), path.Join("/tmp/pj-run-code/source-code", "user_code"))
-
-			// image := imageName
-			image := imageName + RuntimeImageTag
-
-			buildCmd := ""
-
-			if isClang {
-				strs := strings.Split(lang.Name(), "-")
-				buildCmd = "/app/build-" + strs[1] + ".sh"
-			}
-
-			pull(image)
-			buildAndRun(fmt.Sprintf("use %s test %s/%s\n", image, lang.Name(), file.Name()), image, buildCmd)
-		}
+	for _, test := range tests {
+		fmt.Printf("test set [%s]\n", test.Name())
+		runTest(codeBase + "/tests/" + test.Name())
 	}
 
 	// 再来测试异常代码
@@ -253,9 +309,9 @@ func pull(image string) {
 }
 
 func main() {
-	pull("pigeonojdev/runtime-c" + RuntimeImageTag)
-	pull("pigeonojdev/runtime-cpp" + RuntimeImageTag)
-	pull("pigeonojdev/runtime-python" + RuntimeImageTag)
+	for _, v := range actuator.SimpleLangList {
+		pull("pigeonojdev/runtime-" + actuator.LanguageMap[v] + RuntimeImageTag)
+	}
 
 	testRumtimeErrorCode()
 	testResourceCollect()
