@@ -12,7 +12,7 @@ const Prefix = `
 | ----------- | ------------------------- |`
 
 func renderTemplate(language string) string {
-	_template := `| %s          | ![runtime-%s-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-%s)  |`
+	_template := `| %s          | ![runtime-%s-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-%s/0.0.0-alpha.6)  |`
 	return strings.Trim(fmt.Sprintf(_template, language, language, language), "\n")
 }
 

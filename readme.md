@@ -43,31 +43,32 @@ todo list
 
 内置的判题为每种 hustoj 支持的语言单独打包了一个 image
 
-| image      | 体积                                                                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------- |
-| c          | ![runtime-c-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-c)                   |
-| cpp        | ![runtime-cpp-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cpp)               |
-| pascal     | ![runtime-pascal-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-pascal)         |
-| java       | ![runtime-java-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-java)             |
-| ruby       | ![runtime-ruby-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-ruby)             |
-| bash       | ![runtime-bash-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-bash)             |
-| python     | ![runtime-python-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-python)         |
-| php        | ![runtime-php-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-php)               |
-| perl       | ![runtime-perl-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-perl)             |
-| csharp     | ![runtime-csharp-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-csharp)         |
-| objectivec | ![runtime-objectivec-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-objectivec) |
-| freebasic  | ![runtime-freebasic-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-freebasic)   |
-| scheme     | ![runtime-scheme-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-scheme)         |
-| lua        | ![runtime-lua-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-lua)               |
-| javascript | ![runtime-javascript-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-javascript) |
-| golang     | ![runtime-golang-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-golang)         |
-| fortran    | ![runtime-fortran-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-fortran)       |
-| matlab     | ![runtime-matlab-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-matlab)         |
-| cobol      | ![runtime-cobol-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cobol)           |
-| r          | ![runtime-r-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-r)                   |
-| scratch3   | ![runtime-scratch3-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-scratch3)     |
-| cangjie    | ![runtime-cangjie-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cangjie)       |
-| clang      | ![runtime-clang-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-clang)           |
+| image      | 体积                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| c          | ![runtime-c-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-c/0.0.0-alpha.6)                   |
+| cpp        | ![runtime-cpp-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cpp/0.0.0-alpha.6)               |
+| pascal     | ![runtime-pascal-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-pascal/0.0.0-alpha.6)         |
+| java       | ![runtime-java-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-java/0.0.0-alpha.6)             |
+| ruby       | ![runtime-ruby-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-ruby/0.0.0-alpha.6)             |
+| bash       | ![runtime-bash-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-bash/0.0.0-alpha.6)             |
+| python     | ![runtime-python-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-python/0.0.0-alpha.6)         |
+| php        | ![runtime-php-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-php/0.0.0-alpha.6)               |
+| perl       | ![runtime-perl-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-perl/0.0.0-alpha.6)             |
+| csharp     | ![runtime-csharp-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-csharp/0.0.0-alpha.6)         |
+| objectivec | ![runtime-objectivec-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-objectivec/0.0.0-alpha.6) |
+| freebasic  | ![runtime-freebasic-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-freebasic/0.0.0-alpha.6)   |
+| scheme     | ![runtime-scheme-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-scheme/0.0.0-alpha.6)         |
+| lua        | ![runtime-lua-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-lua/0.0.0-alpha.6)               |
+| javascript | ![runtime-javascript-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-javascript/0.0.0-alpha.6) |
+| golang     | ![runtime-golang-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-golang/0.0.0-alpha.6)         |
+| fortran    | ![runtime-fortran-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-fortran/0.0.0-alpha.6)       |
+| matlab     | ![runtime-matlab-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-matlab/0.0.0-alpha.6)         |
+| cobol      | ![runtime-cobol-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cobol/0.0.0-alpha.6)           |
+| r          | ![runtime-r-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-r/0.0.0-alpha.6)                   |
+| scratch3   | ![runtime-scratch3-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-scratch3/0.0.0-alpha.6)     |
+| cangjie    | ![runtime-cangjie-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-cangjie/0.0.0-alpha.6)       |
+| clang      | ![runtime-clang-image-size](https://img.shields.io/docker/image-size/pigeonojdev/runtime-clang/0.0.0-alpha.6)           |
+
 
 ## 判题开销
 
