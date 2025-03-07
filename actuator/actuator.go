@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -160,12 +159,12 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		panic(err)
 	}
 
-	statJSON, err := json.Marshal(stat)
-	if err != nil {
-		panic(err)
-	} else {
-		fmt.Printf("cgroup.stat: %s\n", statJSON)
-	}
+	// statJSON, err := json.Marshal(stat)
+	// if err != nil {
+	// 	panic(err)
+	// } else {
+	// 	fmt.Printf("cgroup.stat: %s\n", statJSON)
+	// }
 
 	ret.MemoryUsage = int(stat.Memory.GetMaxUsage())
 	ret.TimeCost = int(stat.CPU.GetUsageUsec() / 1000)

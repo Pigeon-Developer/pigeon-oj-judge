@@ -126,6 +126,40 @@ int main(int argc, const char * argv[]) {
 	fmt.Printf("compileResult: %+v\n", compileResult)
 }
 
+func testGolang() {
+	os.RemoveAll("/tmp/pj-run-code/source-code")
+	os.RemoveAll("/tmp/pj-run-code/artifacts")
+	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+
+	writeFile("/tmp/pj-run-code/test.in", "")
+	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+package main
+
+import "fmt"
+
 func main() {
-	testOC()
+	fmt.Println("Hello World!")
+}
+`)
+
+	image := "pigeonojdev/runtime-golang:0.0.0-alpha.7"
+	compileResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/build.sh"}, []mount.Mount{
+		{
+			Type:   mount.TypeBind,
+			Source: "/tmp/pj-run-code/source-code",
+			Target: "/mount/source-code",
+		},
+		{
+			Type:   mount.TypeBind,
+			Source: "/tmp/pj-run-code/artifacts",
+			Target: "/mount/artifacts",
+		},
+	}, 10)
+
+	fmt.Printf("compileResult: %+v\n", compileResult)
+}
+
+func main() {
+	testGolang()
 }

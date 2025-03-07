@@ -14,7 +14,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-const RuntimeImageTag = ":0.0.0-alpha.6"
+const RuntimeImageTag = ":0.0.0-alpha.7"
 
 func writeFile(filePath string, content string) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
@@ -56,14 +56,14 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func buildAndRun(beginDesc, image, buildCmd string) {
+func buildAndRun(beginDesc, image, buildCmd string) (actuator.RunResult, actuator.RunResult) {
 	if buildCmd == "" {
-		buildCmd = "/app/build.sh"
+		buildCmd = "export DOTNET_EnableWriteXorExecute=0 && /app/build.sh"
 	}
 	writeFile("/tmp/pj-run-code/test.out", "")
 	fmt.Printf("%s", beginDesc)
 
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", buildCmd}, []mount.Mount{
+	compileResult := actuator.RunInDocker(image, []string{"bash", "-c", buildCmd}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: "/tmp/pj-run-code/source-code",
@@ -77,11 +77,10 @@ func buildAndRun(beginDesc, image, buildCmd string) {
 	}, 10)
 
 	if compileResult.ExitCode != 0 {
-		printResult(compileResult, actuator.RunResult{})
-		return
+		return compileResult, actuator.RunResult{}
 	}
 
-	runResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/run.sh"}, []mount.Mount{
+	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/run.sh"}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: "/tmp/pj-run-code/test.in",
@@ -99,7 +98,7 @@ func buildAndRun(beginDesc, image, buildCmd string) {
 		},
 	}, 10)
 
-	printResult(compileResult, runResult)
+	return compileResult, runResult
 }
 
 // 测试会引起 runtime 异常的代码
@@ -154,7 +153,7 @@ func testRumtimeErrorCode() {
 	}
 }
 
-func runTestLang(langPath, image, buildCmd string) {
+func runTestLang(langPath, image, buildCmd string) (actuator.RunResult, actuator.RunResult) {
 	if buildCmd == "" {
 		buildCmd = "/app/build.sh"
 	}
@@ -166,14 +165,19 @@ func runTestLang(langPath, image, buildCmd string) {
 
 	copyFile(path.Join(langPath, codeFile), "/tmp/pj-run-code/source-code/user_code")
 
-	buildAndRun("", image, buildCmd)
+	return buildAndRun("", image, buildCmd)
 }
 
-func runTest(testPath string) {
+func runTest(_testPath, name string) {
+	testPath := _testPath + name
 	langs, _ := os.ReadDir(testPath)
 
 	inFile := ""
 	outFile := ""
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"", "compile - ExitCode", "run - ExitCode", "compile cost", "run cost", "match", "outfile"})
 
 	for _, lang := range langs {
 		if lang.IsDir() {
@@ -208,40 +212,97 @@ func runTest(testPath string) {
 		writeFile("/tmp/pj-run-code/test.out", "")
 
 		fmt.Printf("test %s\n", lang.Name())
-		runTestLang(langPath, "pigeonojdev/runtime-"+lang.Name()+RuntimeImageTag, "")
+		compileResult, runResult := runTestLang(langPath, "pigeonojdev/runtime-"+lang.Name()+RuntimeImageTag, "")
 
-		fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+		isMatch := actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out")
+
+		outfileBytes, err := os.ReadFile("/tmp/pj-run-code/test.out") // just pass the file name
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		outfileStr := string(outfileBytes)
+
+		t.AppendRow(table.Row{
+			lang.Name(),
+			compileResult.ExitCode,
+			runResult.ExitCode,
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
+			isMatch,
+			outfileStr,
+		})
 	}
 
 	// 测试 clang c
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+	{
+		os.RemoveAll("/tmp/pj-run-code/source-code")
+		os.RemoveAll("/tmp/pj-run-code/artifacts")
+		os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+		os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
 
-	langPathC := testPath + "/" + "c"
-	copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
-	writeFile("/tmp/pj-run-code/test.out", "")
+		langPathC := testPath + "/" + "c"
+		copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
+		writeFile("/tmp/pj-run-code/test.out", "")
 
-	fmt.Printf("test clang-c\n")
-	runTestLang(langPathC, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-c.sh")
+		fmt.Printf("test clang-c\n")
+		compileResult, runResult := runTestLang(langPathC, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-c.sh")
 
-	fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+		isMatch := actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out")
+
+		outfileBytes, err := os.ReadFile("/tmp/pj-run-code/test.out") // just pass the file name
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		outfileStr := string(outfileBytes)
+
+		t.AppendRow(table.Row{
+			"clang-c",
+			compileResult.ExitCode,
+			runResult.ExitCode,
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
+			isMatch,
+			outfileStr,
+		})
+	}
 
 	// 测试 clang cpp
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+	{
+		os.RemoveAll("/tmp/pj-run-code/source-code")
+		os.RemoveAll("/tmp/pj-run-code/artifacts")
+		os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+		os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
 
-	langPathCpp := testPath + "/" + "cpp"
-	copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
-	writeFile("/tmp/pj-run-code/test.out", "")
+		langPathCpp := testPath + "/" + "cpp"
+		copyFile(path.Join(testPath, inFile), "/tmp/pj-run-code/test.in")
+		writeFile("/tmp/pj-run-code/test.out", "")
 
-	fmt.Printf("test clang-cpp\n")
-	runTestLang(langPathCpp, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-cpp.sh")
+		fmt.Printf("test clang-cpp\n")
+		compileResult, runResult := runTestLang(langPathCpp, "pigeonojdev/runtime-clang"+RuntimeImageTag, "/app/build-cpp.sh")
 
-	fmt.Println("compare result", actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out"))
+		isMatch := actuator.CompareLineByLine(path.Join(testPath, outFile), "/tmp/pj-run-code/test.out")
+
+		outfileBytes, err := os.ReadFile("/tmp/pj-run-code/test.out") // just pass the file name
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		outfileStr := string(outfileBytes)
+
+		t.AppendRow(table.Row{
+			"clang-cpp",
+			compileResult.ExitCode,
+			runResult.ExitCode,
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
+			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
+			isMatch,
+			outfileStr,
+		})
+	}
+
+	t.Render()
 }
 
 // 测试资源消耗的收集
@@ -264,7 +325,7 @@ func testResourceCollect() {
 
 	for _, test := range tests {
 		fmt.Printf("test set [%s]\n", test.Name())
-		runTest(codeBase + "/tests/" + test.Name())
+		runTest(codeBase+"/tests/", test.Name())
 	}
 
 	// 再来测试异常代码
@@ -295,9 +356,14 @@ func printResult(compile, run actuator.RunResult) {
 		{"exit code", compile.ExitCode, run.ExitCode},
 		{"timecost/ms", compile.TimeCost, run.TimeCost},
 		{"mmory usage", humanize.Bytes(uint64(compile.MemoryUsage)), humanize.Bytes(uint64(run.MemoryUsage))},
-		{"stdout", compile.Stdout, run.Stdout},
-		{"stderr", compile.Stderr, run.Stderr},
 	})
+
+	if compile.ExitCode != 0 || run.ExitCode != 0 {
+		t.AppendRows([]table.Row{
+			{"stdout", compile.Stdout, run.Stdout},
+			{"stderr", compile.Stderr, run.Stderr},
+		})
+	}
 	t.Render()
 }
 
@@ -312,6 +378,7 @@ func main() {
 	for _, v := range actuator.SimpleLangList {
 		pull("pigeonojdev/runtime-" + actuator.LanguageMap[v] + RuntimeImageTag)
 	}
+	pull("pigeonojdev/runtime-clang" + RuntimeImageTag)
 
 	testRumtimeErrorCode()
 	testResourceCollect()
