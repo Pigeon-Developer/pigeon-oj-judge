@@ -189,7 +189,7 @@ func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 	buildTimeLimit := 5
 
 	runtimeConfig := RuntimeRegistry[job.Data.Language]
-	ret := RunInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.BuildCmd}, []mount.Mount{
+	ret := RunInDocker(runtimeConfig.Image, []string{"bash", "-c", runtimeConfig.BuildCmd}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: solutionPath,
@@ -242,7 +242,7 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 		runTimeLimit := int(math.Ceil(job.Data.TimeLimit))
 
 		runtimeConfig := RuntimeRegistry[job.Data.Language]
-		runResult := RunInDocker(runtimeConfig.Image, []string{"bash", "-l", "-c", runtimeConfig.RunCmd}, []mount.Mount{
+		runResult := RunInDocker(runtimeConfig.Image, []string{"bash", "-c", runtimeConfig.RunCmd}, []mount.Mount{
 			{
 				ReadOnly: false,
 				Type:     mount.TypeBind,
