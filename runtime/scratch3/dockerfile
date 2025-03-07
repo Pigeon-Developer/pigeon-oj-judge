@@ -1,9 +1,11 @@
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install --no-install-recommends scratch -y
+RUN apt-get update && apt-get install --no-install-recommends unzip -y
 RUN apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 RUN mkdir /app
+ADD https://github.com/VNOI-Admin/scratch-run/releases/download/0.1.5/scratch-run_0.1.5_linux_amd64.zip /app/scratch-run_0.1.5_linux_amd64.zip
+RUN cd /app && unzip scratch-run_0.1.5_linux_amd64.zip && rm scratch-run_0.1.5_linux_amd64.zip
 ADD build.sh /app/build.sh
 ADD run.sh /app/run.sh
 RUN chmod +x /app/*.sh
