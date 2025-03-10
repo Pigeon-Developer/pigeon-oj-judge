@@ -20,74 +20,27 @@ func writeFile(filePath string, content string) {
 }
 
 func testTs() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+	code := `
 console.log("Hello, World!");
-`)
-
-	compileResult := actuator.RunInDocker("pigeonojdev/runtime-javascript:0.0.0-alpha.3", []string{"bash", "-l", "-c", "cd /mount/source-code && cp user_code user_code.js && node ./user_code.js"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("compileResult: %+v\n", compileResult)
+`
+	runAndDump("pigeonojdev/runtime-javascript:0.0.0-alpha.8", code)
 }
 
 func testC() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+	code := `
+	#include <stdio.h>
+	int main()
+	{
+	   printf("Hello, World!");
+	   return 0;
+	}
+	`
 
-	writeFile("/tmp/pj-run-code/test.in", "")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
-#include <stdio.h>
-int main()
-{
-   printf("Hello, World!");
-   return 0;
-}
-`)
-
-	// image := "pigeonojdev/runtime-c:0.0.0-alpha.2"
-	image := "rt-c"
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("compileResult: %+v\n", compileResult)
+	runAndDump("pigeonojdev/runtime-c:0.0.0-alpha.8", code)
 }
 
 func testOC() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "1 2\n")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+	code := `
 #import <Foundation/Foundation.h>
 
 int main(int argc, const char * argv[]) {
@@ -119,49 +72,15 @@ int main(int argc, const char * argv[]) {
     }
     return 0;
 }
-`)
+`
 
 	image := "pigeonojdev/runtime-objectivec:0.0.0-alpha.8"
-	// image := "rt-oc"
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
+	runAndDump(image, code)
 
-	fmt.Printf("compileResult: %+v\n", compileResult)
-
-	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "cat /app/data.in | /mount/artifacts/main.bin"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/test.in",
-			Target: "/app/data.in",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("runResult: %+v\n", runResult)
 }
 
 func testGolang() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+	code := `
 package main
 
 import "fmt"
@@ -169,88 +88,26 @@ import "fmt"
 func main() {
 	fmt.Println("Hello World!")
 }
-`)
+	`
 
-	image := "pigeonojdev/runtime-golang:0.0.0-alpha.7"
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/build.sh"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("compileResult: %+v\n", compileResult)
+	image := "pigeonojdev/runtime-golang:0.0.0-alpha.8"
+	runAndDump(image, code)
 }
 
 func testFreeBasic() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "1 2\n")
-	writeFile("/tmp/pj-run-code/test.out", "")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+	runAndDump("pigeonojdev/runtime-freebasic:0.0.0-alpha.8", `
 DIM a AS INTEGER
 DIM b AS INTEGER
+Dim sum As Integer
 
 INPUT "", a, b
-PRINT a + b
+sum = a + b
+Print "" & sum
 `)
-
-	image := "pigeonojdev/runtime-freebasic:0.0.0-alpha.8"
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/build.sh"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("compileResult: %+v\n", compileResult)
-
-	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "cat /app/data.in | /mount/artifacts/main.bin"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/test.in",
-			Target: "/app/data.in",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/test.out",
-			Target: "/app/data.out",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("runResult: %+v\n", runResult)
 }
 
 func testBash() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "1 2\n")
-	writeFile("/tmp/pj-run-code/test.out", "")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `#!/bin/bash
+	code := `#!/bin/bash
 
 while read -r line; do
     a=$(echo $line | cut -d ' ' -f 1)
@@ -259,54 +116,12 @@ while read -r line; do
     echo $sum
 done
 
-`)
-
-	image := "pigeonojdev/runtime-bash:0.0.0-alpha.8"
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/source-code",
-			Target: "/mount/source-code",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("compileResult: %+v\n", compileResult)
-
-	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "cat /app/data.in | bash /mount/artifacts/source_code.sh  > /app/data.out"}, []mount.Mount{
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/test.in",
-			Target: "/app/data.in",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/test.out",
-			Target: "/app/data.out",
-		},
-		{
-			Type:   mount.TypeBind,
-			Source: "/tmp/pj-run-code/artifacts",
-			Target: "/mount/artifacts",
-		},
-	}, 10)
-
-	fmt.Printf("runResult: %+v\n", runResult)
+`
+	runAndDump("pigeonojdev/runtime-bash:0.0.0-alpha.8", code)
 }
 
 func testScheme() {
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/source-code")
-	os.RemoveAll("/tmp/pj-run-code/artifacts")
-	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
-	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
-
-	writeFile("/tmp/pj-run-code/test.in", "1 2\n")
-	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), `
+	code := `
 (use-modules (ice-9 rdelim))  ; Guile Scheme
 
 (define (read-numbers)
@@ -328,9 +143,21 @@ func testScheme() {
       (display "Error: Need two numbers"))
   (newline))
 
-`)
+`
+	runAndDump("pigeonojdev/runtime-scheme:0.0.0-alpha.8", code)
+}
 
-	image := "pigeonojdev/runtime-scheme:0.0.0-alpha.8"
+func runAndDump(image, code string) {
+	os.RemoveAll("/tmp/pj-run-code/source-code")
+	os.RemoveAll("/tmp/pj-run-code/source-code")
+	os.RemoveAll("/tmp/pj-run-code/artifacts")
+	os.MkdirAll("/tmp/pj-run-code/source-code", os.ModePerm)
+	os.MkdirAll("/tmp/pj-run-code/artifacts", os.ModePerm)
+
+	writeFile("/tmp/pj-run-code/test.in", "1111 2222\r\n")
+	writeFile("/tmp/pj-run-code/test.out", "")
+	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), code)
+
 	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
@@ -346,11 +173,16 @@ func testScheme() {
 
 	fmt.Printf("compileResult: %+v\n", compileResult)
 
-	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "cat /app/data.in | guile /mount/artifacts/source_code.scm"}, []mount.Mount{
+	runResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/run.sh"}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: "/tmp/pj-run-code/test.in",
 			Target: "/app/data.in",
+		},
+		{
+			Type:   mount.TypeBind,
+			Source: "/tmp/pj-run-code/test.out",
+			Target: "/app/data.out",
 		},
 		{
 			Type:   mount.TypeBind,
@@ -360,8 +192,27 @@ func testScheme() {
 	}, 10)
 
 	fmt.Printf("runResult: %+v\n", runResult)
+
+	outfileBytes, err := os.ReadFile("/tmp/pj-run-code/test.out") // just pass the file name
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	outfileStr := string(outfileBytes)
+
+	fmt.Printf("outfile byte: [%+v] str: [%s]\n", outfileBytes, outfileStr)
+}
+
+func testR() {
+	code := `
+input <- readLines("stdin", n=1)
+nums <- as.numeric(strsplit(input, " ")[[1]])
+cat(nums[1] + nums[2])
+`
+
+	runAndDump("pigeonojdev/runtime-r:0.0.0-alpha.8", code)
 }
 
 func main() {
-	testBash()
+	testR()
 }

@@ -230,7 +230,7 @@ func runTest(_testPath, name string) {
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
 			isMatch,
-			outfileStr,
+			strings.Trim(outfileStr, "\n"),
 		})
 	}
 
@@ -264,7 +264,7 @@ func runTest(_testPath, name string) {
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
 			isMatch,
-			outfileStr,
+			strings.Trim(outfileStr, "\n"),
 		})
 	}
 
@@ -298,7 +298,7 @@ func runTest(_testPath, name string) {
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(compileResult.MemoryUsage)), compileResult.TimeCost),
 			fmt.Sprintf("%s / %dms", humanize.Bytes(uint64(runResult.MemoryUsage)), runResult.TimeCost),
 			isMatch,
-			outfileStr,
+			strings.Trim(outfileStr, "\n"),
 		})
 	}
 
