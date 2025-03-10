@@ -117,7 +117,7 @@ func init() {
 		Language_matlab,
 		Language_cobol,
 		Language_r,
-		Language_scratch3,
+		// Language_scratch3,
 		Language_cangjie)
 
 	CurrentTag := "0.0.0-alpha.5"
