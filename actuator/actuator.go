@@ -53,7 +53,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	if err != nil {
 		panic(err)
 	}
-	defer cgroup.Cgroup.Delete()
+	defer cgroup.Delete()
 
 	stopTimeout := 5
 	// 这里假设所有操作都能在 (timeLimit+5)s 内完成

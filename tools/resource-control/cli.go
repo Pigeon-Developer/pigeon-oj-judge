@@ -158,7 +158,7 @@ func runAndDump(image, code string) {
 	writeFile("/tmp/pj-run-code/test.out", "")
 	writeFile(path.Join("/tmp/pj-run-code/source-code", "user_code"), code)
 
-	compileResult := actuator.RunInDocker(image, []string{"bash", "-l", "-c", "/app/build.sh"}, []mount.Mount{
+	compileResult := actuator.RunInDocker(image, []string{"bash", "-c", "/app/build.sh"}, []mount.Mount{
 		{
 			Type:   mount.TypeBind,
 			Source: "/tmp/pj-run-code/source-code",
@@ -214,5 +214,5 @@ cat(nums[1] + nums[2])
 }
 
 func main() {
-	testR()
+	testGolang()
 }
