@@ -35,5 +35,5 @@ func Boot() {
 
 	solution.NewSolutionPool(appConfig.SolutionSource)
 
-	RunLoop()
+	RunLoop(appConfig.Judge.MaxConcurrent)
 }

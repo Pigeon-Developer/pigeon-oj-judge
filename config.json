@@ -21,5 +21,8 @@
     "clang": true,
     "java": true,
     "python": true
+  },
+  "judge": {
+    "max_concurrent": 4
   }
 }

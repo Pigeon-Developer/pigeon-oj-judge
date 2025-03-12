@@ -1,99 +1,57 @@
 package app
 
 import (
-	"fmt"
-	"sync"
 	"time"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
 )
 
-// MaxConcurrentJudges defines the maximum number of concurrent judge operations
-var MaxConcurrentJudges = 4
-
-// WorkerPool manages a pool of workers for concurrent judgement
-type WorkerPool struct {
-	jobChan chan *solution.JudgeJob
-	wg      sync.WaitGroup
-}
-
-// NewWorkerPool creates a new worker pool with n workers
-func NewWorkerPool(n int) *WorkerPool {
-	return &WorkerPool{
-		jobChan: make(chan *solution.JudgeJob, n),
-	}
-}
-
-// Start starts the worker pool
-func (wp *WorkerPool) Start() {
-	for i := range MaxConcurrentJudges {
-		wp.wg.Add(1)
-		go func(workerID int) {
-			defer wp.wg.Done()
-			for job := range wp.jobChan {
-				result := actuator.JudgeUserSubmit(job)
-				job.UpdateResult(result)
-			}
-		}(i)
-	}
-}
-
-// Submit submits a job to the worker pool
-func (wp *WorkerPool) Submit(job *solution.JudgeJob) {
-	wp.jobChan <- job
-}
-
-// Close closes the worker pool
-func (wp *WorkerPool) Close() {
-	close(wp.jobChan)
-	wp.wg.Wait()
-}
-
-func fetchSolutionFromPool() (*solution.JudgeJob, error) {
+func fetchSolutionFromPool(jobChan chan<- *solution.JudgeJob) error {
 	var soluton *solution.Solution
 	var err error
 	for _, instance := range solution.InstancePool {
 		soluton, err = instance.Source.GetOne()
 		if err == nil {
-			return &solution.JudgeJob{
+			jobChan <- &solution.JudgeJob{
 				SourceID: instance.ID,
 				Data:     soluton,
-			}, nil
+			}
+			return nil
 		}
 	}
 
-	return nil, err
+	return err
 }
 
-func RunLoop() {
-	// Create a semaphore channel with capacity MaxConcurrentJudges
-	semaphore := make(chan struct{}, MaxConcurrentJudges)
+func RunLoop(maxConcurrent int) {
+	// Create job channel with buffer to avoid blocking
+	jobChan := make(chan *solution.JudgeJob, maxConcurrent)
+
+	// Create a semaphore to track active judge operations
+	sem := make(chan struct{}, maxConcurrent)
+
+	// Start job consumer goroutines
+	for range maxConcurrent {
+		go func() {
+			for job := range jobChan {
+				sem <- struct{}{} // Acquire semaphore
+				result := actuator.JudgeUserSubmit(job)
+				job.UpdateResult(result)
+				<-sem // Release semaphore
+			}
+		}()
+	}
 
 	for {
-		// Try to acquire a semaphore slot
-		select {
-		case semaphore <- struct{}{}: // Successfully acquired a slot
-			// Fetch and process a new job only when we have capacity
-			go func() {
-				defer func() {
-					// Release the semaphore when the job is done
-					<-semaphore
-				}()
-
-				job, err := fetchSolutionFromPool()
-				if err == nil {
-					result := actuator.JudgeUserSubmit(job)
-					job.UpdateResult(result)
-				} else {
-					fmt.Println(err)
-				}
-			}()
-		default:
-			// Maximum concurrency reached, wait before checking again
-			// No new tasks will be fetched until a worker becomes available
+		if len(sem) < maxConcurrent {
+			err := fetchSolutionFromPool(jobChan)
+			if err == nil {
+				continue
+			}
 		}
 
-		time.Sleep(500 * time.Millisecond)
+		// 获取任务存在报错，或者任务队列已满时，等待 1 秒
+		time.Sleep(1 * time.Second)
 	}
 }
