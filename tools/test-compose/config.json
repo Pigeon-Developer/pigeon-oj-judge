@@ -10,12 +10,12 @@
       "type": "",
       "data": {
         "dbType": "mysql",
-        "dsn": "root:testtest@tcp(127.0.0.1:3306)/jol?charset=utf8mb4&parseTime=True"
+        "dsn": "root:testtest@tcp(mysql:3306)/jol?charset=utf8mb4&parseTime=True"
       }
     }
   },
   "builtin_runtime": {
-    "enable_list": ["bash", "c", "cpp", "clang", "java", "python"],
+    "enable_list": ["bash", "c"],
     "version": "0.0.0-alpha.8"
   },
   "judge": {

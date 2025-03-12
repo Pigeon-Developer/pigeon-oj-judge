@@ -1,0 +1,20 @@
+services:
+  judge:
+    image: pigeon-oj/server-dev
+    privileged: true
+    env_file: judge.env
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: ./config.json
+        target: /app/config.json
+    build:
+      dockerfile: ./tools/test-compose/judge.Dockerfile
+      context: ../..
+
+  mysql:
+    image: pigeonojdev/compose-db:0.0.0-alpha.0
+    env_file: db.env
+    restart: always

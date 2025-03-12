@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
@@ -24,7 +25,7 @@ func fetchSolutionFromPool(jobChan chan<- *solution.JudgeJob) error {
 	return err
 }
 
-func RunLoop(maxConcurrent int) {
+func RunLoop(maxConcurrent int, emptyWait int) {
 	// Create job channel with buffer to avoid blocking
 	jobChan := make(chan *solution.JudgeJob, maxConcurrent)
 
@@ -49,9 +50,11 @@ func RunLoop(maxConcurrent int) {
 			if err == nil {
 				continue
 			}
+
+			fmt.Println("fetchSolutionFromPool ", err)
 		}
 
-		// 获取任务存在报错，或者任务队列已满时，等待 1 秒
-		time.Sleep(1 * time.Second)
+		// 获取任务存在报错，或者任务队列已满
+		time.Sleep(time.Duration(emptyWait) * time.Second)
 	}
 }
