@@ -1,10 +1,5 @@
 package actuator
 
-import (
-	"os"
-	"os/exec"
-)
-
 type ImageConfig struct {
 	BuildCmd string `json:"build_cmd"`
 	RunCmd   string `json:"run_cmd"`
@@ -23,7 +18,7 @@ var (
 	SimpleLangList  = make([]int, 0, 32)
 )
 
-func init() {
+func initLanguageResource(CurrentTag string) {
 	// 1
 	LanguageMap[Language_c] = "c"
 	LanguageMap[Language_cpp] = "cpp"
@@ -120,8 +115,6 @@ func init() {
 		// Language_scratch3,
 		Language_cangjie)
 
-	CurrentTag := "0.0.0-alpha.8"
-
 	for _, v := range SimpleLangList {
 		RuntimeRegistry[v] = ImageConfig{
 			BuildCmd: "/app/build.sh",
@@ -143,18 +136,8 @@ func init() {
 	}
 }
 
-func pull(image string) {
-	cmd := exec.Command("docker", "pull", image)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Run()
-}
-
-func PullBuiltinRuntime(builtinRuntime map[string]bool) {
-	for language, enable := range builtinRuntime {
-		if !enable {
-			continue
-		}
+func PullBuiltinRuntime(builtinRuntime []string) {
+	for _, language := range builtinRuntime {
 		langDefine, ok := LangMap[language]
 		if !ok {
 			continue
@@ -164,6 +147,14 @@ func PullBuiltinRuntime(builtinRuntime map[string]bool) {
 			continue
 		}
 
-		pull(config.Image)
+		ImagePull(config.Image)
 	}
+}
+
+// 初始化必要的资源
+func Prepare(enableList []string, version string) {
+	initLanguageResource(version)
+	initDockerClient()
+
+	PullBuiltinRuntime(enableList)
 }

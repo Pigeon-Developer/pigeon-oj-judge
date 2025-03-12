@@ -31,7 +31,7 @@ func Boot() {
 
 	json.Unmarshal(byteValue, &appConfig)
 
-	actuator.PullBuiltinRuntime(appConfig.BuiltinRuntime)
+	actuator.Prepare(appConfig.BuiltinRuntime.EnableList, appConfig.BuiltinRuntime.Version)
 
 	solution.NewSolutionPool(appConfig.SolutionSource)
 

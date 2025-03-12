@@ -15,12 +15,8 @@
     }
   },
   "builtin_runtime": {
-    "bash": true,
-    "c": true,
-    "cpp": true,
-    "clang": true,
-    "java": true,
-    "python": true
+    "enable_list": ["bash", "c", "cpp", "clang", "java", "python"],
+    "version": "0.0.0-alpha.8"
   },
   "judge": {
     "max_concurrent": 4

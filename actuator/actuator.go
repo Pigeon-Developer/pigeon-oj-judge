@@ -15,7 +15,6 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/google/uuid"
 
@@ -62,15 +61,10 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout)
 	defer cancel()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		panic(err)
-	}
-
 	// 默认使用 1G 的内存限制
 	size1G := int64(1 * 1024 * 1024 * 1024)
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
+	resp, err := dockerClient.ContainerCreate(ctx, &container.Config{
 		NetworkDisabled: true,
 		StopTimeout:     &stopTimeout,
 		Image:           image,
@@ -111,17 +105,17 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		panic(err)
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+	if err := dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		panic(err)
 	}
 
 	// 超时时停止容器
 	time.AfterFunc(buildTimeout, func() {
-		cli.ContainerStop(context.Background(), resp.ID, container.StopOptions{})
+		dockerClient.ContainerStop(context.Background(), resp.ID, container.StopOptions{})
 	})
 
 	// 因为上面超时会暂停，所以这里不需要设置超时
-	statusCh, errCh := cli.ContainerWait(context.Background(), resp.ID, container.WaitConditionNotRunning)
+	statusCh, errCh := dockerClient.ContainerWait(context.Background(), resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -135,7 +129,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 
 	getLogCtx, cancelLogCtx := context.WithTimeout(context.Background(), buildTimeout)
 	defer cancelLogCtx()
-	out, err := cli.ContainerLogs(getLogCtx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
+	out, err := dockerClient.ContainerLogs(getLogCtx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +165,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 
 	removeCtx, cancelRemoveCtx := context.WithTimeout(context.Background(), buildTimeout)
 	defer cancelRemoveCtx()
-	cli.ContainerRemove(removeCtx, resp.ID, container.RemoveOptions{})
+	dockerClient.ContainerRemove(removeCtx, resp.ID, container.RemoveOptions{})
 
 	return ret
 }
