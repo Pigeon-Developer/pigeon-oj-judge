@@ -3,7 +3,8 @@
     "problem_provider": {
       "type": "hustoj-local",
       "data": {
-        "path": "/tmp/hustoj-dev/data"
+        "path": "/tmp/hustoj-dev/data",
+        "host_path": "/tmp/hustoj-dev/data"
       }
     },
     "rw_config": {

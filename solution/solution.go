@@ -52,10 +52,19 @@ func GetSolutionInstance(id int) *SolutionInstance {
 }
 
 // 获取题目数据的 path
+// 这个指容器内的路径，也就是此程序可以直接读到的路径
 func GetSolutionDataPath(id int) string {
 	ins := InstancePool[id]
 
 	return ins.ProblemProvider.Data["path"].(string)
+}
+
+// 获取题目数据的 path
+// 这个指宿主内的路径，也就是 docker host 可以直接读到的路径
+func GetSolutionDataHostPath(id int) string {
+	ins := InstancePool[id]
+
+	return ins.ProblemProvider.Data["host_path"].(string)
 }
 
 func NewSolutionPool(config SourceConfig) {

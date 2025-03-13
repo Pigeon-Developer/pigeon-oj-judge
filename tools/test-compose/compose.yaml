@@ -2,11 +2,16 @@ services:
   judge:
     image: pigeon-oj/judge-dev
     privileged: true
+    pid: host
+    cgroup: host
     env_file: judge.env
     volumes:
       - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
+      - type: bind
+        source: /run/systemd/private
+        target: /run/systemd/private
       - type: bind
         source: ./config.json
         target: /app/config.json

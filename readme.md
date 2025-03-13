@@ -7,7 +7,7 @@
 
 todo list
 
-- [ ] 适配运行在容器中的情况，允许 docker compose 一键启动
+- [ ] 允许手动配置 docker cgroup driver 是否为 systemd
 - [ ] 处理代码中的 panic，对错误分类，改成可读的日志信息
 - [ ] 从数据库获取提交时需要加锁
 - [ ] runtime 适配

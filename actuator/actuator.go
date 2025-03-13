@@ -216,6 +216,9 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 	dataPath := solution.GetSolutionDataPath(job.SourceID)
 	problemDataPath := path.Join(dataPath, strconv.Itoa(job.Data.ProblemId))
 
+	dataHostPath := solution.GetSolutionDataHostPath(job.SourceID)
+	problemDataHostPath := path.Join(dataHostPath, strconv.Itoa(job.Data.ProblemId))
+
 	os.MkdirAll(path.Join(solutionPath, "output"), os.ModePerm)
 
 	entries, err := os.ReadDir(problemDataPath)
@@ -232,7 +235,8 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 			continue
 		}
 
-		inDataPath := path.Join(problemDataPath, e.Name())
+		// 这里用于容器文件 bind，需要使用 host path
+		inDataPath := path.Join(problemDataHostPath, e.Name())
 		outDataPath := path.Join(solutionPath, "output", strings.Replace(e.Name(), ".in", ".out", 1))
 		artifactPath := path.Join(solutionPath, "artifacts")
 
