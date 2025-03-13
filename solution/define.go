@@ -83,7 +83,7 @@ type SolutionSource interface {
 	Close()
 	// 获取一个待判题的提交，如果没有数据，则立即返回
 	// 如果获取到了数据，在函数返回前，就会修改提交状态到判题中
-	GetOne() (*Solution, error)
+	GetOne(languageList []int) (*Solution, error)
 	// 更新用户的 solution 状态
 	Update(solutionId int, result SolutionResult) error
 }

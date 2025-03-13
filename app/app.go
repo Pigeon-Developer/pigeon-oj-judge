@@ -10,6 +10,7 @@ import (
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
+	"github.com/Pigeon-Developer/pigeon-oj-judge/types"
 )
 
 var (
@@ -41,5 +42,10 @@ func Boot() {
 
 	solution.NewSolutionPool(appConfig.SolutionSource)
 
-	RunLoop(appConfig.Judge.MaxConcurrent, appConfig.Judge.EmptyWait)
+	languageList := make([]int, 0, 32)
+	for _, v := range appConfig.BuiltinRuntime.EnableList {
+		languageList = append(languageList, types.LangMap[v])
+	}
+
+	RunLoop(appConfig.Judge.MaxConcurrent, appConfig.Judge.EmptyWait, languageList)
 }

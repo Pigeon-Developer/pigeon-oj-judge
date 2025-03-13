@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
+	"github.com/Pigeon-Developer/pigeon-oj-judge/types"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/dustin/go-humanize"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -196,7 +197,7 @@ func runTest(_testPath, name string) {
 			continue
 		}
 
-		_, hasLang := actuator.LangMap[lang.Name()]
+		_, hasLang := types.LangMap[lang.Name()]
 
 		if !hasLang {
 			continue
@@ -376,7 +377,7 @@ func pull(image string) {
 
 func main() {
 	for _, v := range actuator.SimpleLangList {
-		pull("pigeonojdev/runtime-" + actuator.LanguageMap[v] + RuntimeImageTag)
+		pull("pigeonojdev/runtime-" + types.LanguageMap[v] + RuntimeImageTag)
 	}
 	pull("pigeonojdev/runtime-clang" + RuntimeImageTag)
 

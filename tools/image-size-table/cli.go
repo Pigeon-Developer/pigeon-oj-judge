@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/actuator"
+	"github.com/Pigeon-Developer/pigeon-oj-judge/types"
 )
 
 const Prefix = `
@@ -21,7 +22,7 @@ func main() {
 	result = append(result, Prefix)
 
 	for _, lang := range actuator.SimpleLangList {
-		language := actuator.LanguageMap[lang]
+		language := types.LanguageMap[lang]
 		result = append(result, renderTemplate(language))
 	}
 

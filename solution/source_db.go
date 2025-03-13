@@ -29,12 +29,12 @@ func NewSolutionSourceDB(dbType, dsn string) (*SourceDB, error) {
 	return &source, nil
 }
 
-func (source SourceDB) GetOne() (*Solution, error) {
+func (source SourceDB) GetOne(languageList []int) (*Solution, error) {
 	var err error
 	solution := SolutionRecord{}
 
 	// SELECT solution_id FROM solution WHERE language in (%s) and result<2 ORDER BY result, solution_id  limit %d
-	err = source.db.Get(&solution, "SELECT * FROM solution WHERE result < 2 ORDER BY result, solution_id  limit 1")
+	err = source.db.Get(&solution, "SELECT * FROM solution WHERE result < 2 AND language IN (?) ORDER BY result, solution_id limit 1", languageList)
 	if err != nil {
 		return nil, err
 	}

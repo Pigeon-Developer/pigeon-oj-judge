@@ -8,24 +8,23 @@ import (
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
 )
 
-func fetchSolutionFromPool(jobChan chan<- *solution.JudgeJob) error {
+func fetchSolutionFromPool(languageList []int) (*solution.JudgeJob, error) {
 	var soluton *solution.Solution
 	var err error
 	for _, instance := range solution.InstancePool {
-		soluton, err = instance.Source.GetOne()
+		soluton, err = instance.Source.GetOne(languageList)
 		if err == nil {
-			jobChan <- &solution.JudgeJob{
+			return &solution.JudgeJob{
 				SourceID: instance.ID,
 				Data:     soluton,
-			}
-			return nil
+			}, nil
 		}
 	}
 
-	return err
+	return nil, err
 }
 
-func RunLoop(maxConcurrent int, emptyWait int) {
+func RunLoop(maxConcurrent int, emptyWait int, languageList []int) {
 	// Create job channel with buffer to avoid blocking
 	jobChan := make(chan *solution.JudgeJob, maxConcurrent)
 
@@ -48,8 +47,9 @@ func RunLoop(maxConcurrent int, emptyWait int) {
 
 	for {
 		if len(sem) < maxConcurrent {
-			err := fetchSolutionFromPool(jobChan)
+			job, err := fetchSolutionFromPool(languageList)
 			if err == nil {
+				jobChan <- job
 				continue
 			}
 

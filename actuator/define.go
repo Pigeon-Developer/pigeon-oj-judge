@@ -15,33 +15,5 @@ type UserCodeRunResult struct {
 }
 
 const (
-	Language_c          = 0
-	Language_cpp        = 1
-	Language_pascal     = 2
-	Language_java       = 3
-	Language_ruby       = 4
-	Language_bash       = 5
-	Language_python     = 6
-	Language_php        = 7
-	Language_perl       = 8
-	Language_csharp     = 9
-	Language_objectivec = 10
-	Language_freebasic  = 11
-	Language_scheme     = 12
-	Language_clang      = 13
-	Language_clangpp    = 14
-	Language_lua        = 15
-	Language_javascript = 16
-	Language_golang     = 17
-	Language_sql        = 18
-	Language_fortran    = 19
-	Language_matlab     = 20
-	Language_cobol      = 21
-	Language_r          = 22
-	Language_scratch3   = 23
-	Language_cangjie    = 24
-)
-
-const (
 	SIGXCPU = 152
 )
