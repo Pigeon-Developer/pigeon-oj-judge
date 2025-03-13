@@ -34,7 +34,11 @@ func (source SourceDB) GetOne(languageList []int) (*Solution, error) {
 	solution := SolutionRecord{}
 
 	// SELECT solution_id FROM solution WHERE language in (%s) and result<2 ORDER BY result, solution_id  limit %d
-	err = source.db.Get(&solution, "SELECT * FROM solution WHERE result < 2 AND language IN (?) ORDER BY result, solution_id limit 1", languageList)
+	query, args, err := sqlx.In("SELECT * FROM solution WHERE result < 2 AND language IN (?) ORDER BY result, solution_id limit 1", languageList)
+	if err != nil {
+		return nil, err
+	}
+	err = source.db.Get(&solution, query, args...)
 	if err != nil {
 		return nil, err
 	}
