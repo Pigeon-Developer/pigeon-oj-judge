@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -57,8 +58,8 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	stopTimeout := 5
 	// 这里假设所有操作都能在 (timeLimit+5)s 内完成
 	// @TODO 每个语言允许配置编译耗时
-	buildTimeout := time.Duration((timeLimit + stopTimeout) * int(time.Second))
-	ctx, cancel := context.WithTimeout(context.Background(), buildTimeout)
+	containerRunTimeout := time.Duration((timeLimit + stopTimeout) * int(time.Second))
+	ctx, cancel := context.WithTimeout(context.Background(), containerRunTimeout)
 	defer cancel()
 
 	// 默认使用 1G 的内存限制
@@ -75,12 +76,12 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 			CgroupParent: cgroup.Path,
 			Memory:       size1G,
 			MemorySwap:   size1G,
-			// @TODO 这里应该均匀的分配核心
-			CpusetCpus: "0",
 			Ulimits: []*container.Ulimit{
 				{
 					Name: "cpu",
-					Hard: int64(timeLimit),
+					// cpu load 较高时，如果进程因为这个 limit 被干掉，cgroup usage_usec 数据会稍微小 0.05s
+					// 这里为了方便判断是否为 TLE，设置为 timeLimit+1
+					Hard: int64(timeLimit + 1),
 					Soft: int64(timeLimit),
 				},
 				{
@@ -110,7 +111,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	}
 
 	// 超时时停止容器
-	time.AfterFunc(buildTimeout, func() {
+	time.AfterFunc(containerRunTimeout, func() {
 		dockerClient.ContainerStop(context.Background(), resp.ID, container.StopOptions{})
 	})
 
@@ -127,7 +128,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		}
 	}
 
-	getLogCtx, cancelLogCtx := context.WithTimeout(context.Background(), buildTimeout)
+	getLogCtx, cancelLogCtx := context.WithTimeout(context.Background(), containerRunTimeout)
 	defer cancelLogCtx()
 	out, err := dockerClient.ContainerLogs(getLogCtx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
@@ -153,19 +154,27 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		panic(err)
 	}
 
-	// statJSON, err := json.Marshal(stat)
-	// if err != nil {
-	// 	panic(err)
-	// } else {
-	// 	fmt.Printf("cgroup.stat: %s\n", statJSON)
-	// }
-
 	ret.MemoryUsage = int(stat.Memory.GetMaxUsage())
 	ret.TimeCost = int(stat.CPU.GetUsageUsec() / 1000)
 
-	removeCtx, cancelRemoveCtx := context.WithTimeout(context.Background(), buildTimeout)
+	removeCtx, cancelRemoveCtx := context.WithTimeout(context.Background(), containerRunTimeout)
 	defer cancelRemoveCtx()
 	dockerClient.ContainerRemove(removeCtx, resp.ID, container.RemoveOptions{})
+
+	if ret.ExitCode != 0 {
+		statJSON, err := json.Marshal(stat)
+		if err != nil {
+			panic(err)
+		}
+
+		if timeLimit*1000 > ret.TimeCost {
+			// 其他未知情况
+			fmt.Printf("cgroup.stat: %s\n", statJSON)
+		} else {
+			// 超时停止
+			// fmt.Printf("TLE [%d] time limit: %d, time cost: %d\n", ret.ExitCode, timeLimit*1000, ret.TimeCost)
+		}
+	}
 
 	return ret
 }
@@ -177,7 +186,7 @@ func buildUserSubmitCode(job *solution.JudgeJob) RunResult {
 
 	os.MkdirAll(solutionPath, os.ModePerm)
 	os.MkdirAll(artifactPath, os.ModePerm)
-	writeFile(path.Join(solutionPath, "source_code"), job.Data.Code)
+	writeFile(path.Join(solutionPath, "user_code"), job.Data.Code)
 
 	buildTimeLimit := 5
 
@@ -264,6 +273,18 @@ func runUserSubmitCode(job *solution.JudgeJob) map[string]UserCodeRunResult {
 			Stderr:      runResult.Stderr,
 			Match:       -1,
 		}
+
+		if runResult.ExitCode != 0 {
+			if runResult.TimeCost >= (runTimeLimit * 1000) {
+				// 这里是超时
+			} else {
+				fmt.Printf("运行失败 %d - %s - [%d] \n[%s]\n[%s]\n\n", job.Data.SolutionId, e.Name(), runResult.ExitCode, runResult.Stdout, runResult.Stderr)
+			}
+
+			// 有一个异常就直接跳过后续的测试数据
+			// @TODO 应该允许每个 job 单独配置
+			return ret
+		}
 	}
 
 	return ret
@@ -311,6 +332,12 @@ func CompareLineByLine(file1, file2 string) bool {
 // 判断用户输出是否与数据一致
 func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRunResult) int {
 	for _, v := range runResult {
+		// 是否超时
+		timeLimit := int(math.Ceil(job.Data.TimeLimit)) * 1000
+		if SIGXCPU == v.ExitCode || v.TimeCost >= timeLimit {
+			// @TODO 这里应该细分一下内存超出限制的情况
+			return solution.Result_TLE
+		}
 		if v.ExitCode != 0 {
 			return solution.Result_RE
 		}
@@ -350,7 +377,9 @@ func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRu
 		isAllMatch = isAllMatch && isMatch
 	}
 
-	fmt.Printf("用户的答案是否正确 %v \n", result)
+	if !isAllMatch {
+		fmt.Printf("用户答案 %d %v \n", job.Data.SolutionId, result)
+	}
 
 	if isAllMatch {
 		return solution.Result_AC
@@ -360,9 +389,9 @@ func judgeUserSubmitCode(job *solution.JudgeJob, runResult map[string]UserCodeRu
 }
 
 func JudgeUserSubmit(job *solution.JudgeJob) int {
-	job.UpdateResult(solution.Result_CI)
 	compileResult := buildUserSubmitCode(job)
 	if compileResult.ExitCode != 0 {
+		fmt.Printf("编译失败 %d \n[%s]\n[%s]\n\n", job.Data.SolutionId, compileResult.Stdout, compileResult.Stderr)
 		return solution.Result_CE
 	}
 	job.UpdateResult(solution.Result_RJ)

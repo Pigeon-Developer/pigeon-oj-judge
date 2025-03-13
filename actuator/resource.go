@@ -14,7 +14,7 @@ import (
 
 const (
 	_DefaultMountPoint = "/sys/fs/cgroup"
-	Prefix             = "pojj-"
+	Prefix             = "pojj_"
 )
 
 var (

@@ -44,6 +44,8 @@ func RunLoop(maxConcurrent int, emptyWait int) {
 		}()
 	}
 
+	start := time.Now()
+
 	for {
 		if len(sem) < maxConcurrent {
 			err := fetchSolutionFromPool(jobChan)
@@ -52,6 +54,9 @@ func RunLoop(maxConcurrent int, emptyWait int) {
 			}
 
 			fmt.Println("fetchSolutionFromPool ", err)
+			elapsed := time.Since(start)
+			elapsed = elapsed.Round(time.Millisecond)
+			fmt.Printf("程序已经运行了: %s\n", elapsed)
 		}
 
 		// 获取任务存在报错，或者任务队列已满

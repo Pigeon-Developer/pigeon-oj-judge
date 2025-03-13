@@ -39,6 +39,8 @@ func (source SourceDB) GetOne() (*Solution, error) {
 		return nil, err
 	}
 
+	source.Update(solution.SolutionId, SolutionResult{Result: Result_CI})
+
 	problem := ProblemRecord{}
 
 	err = source.db.Get(&problem, "SELECT * FROM problem WHERE problem_id = ? LIMIT 1", solution.ProblemId)

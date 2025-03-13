@@ -3,7 +3,7 @@
     "problem_provider": {
       "type": "hustoj-local",
       "data": {
-        "path": "/hustoj-data"
+        "path": "/tmp/hustoj-dev/data"
       }
     },
     "rw_config": {
@@ -15,14 +15,14 @@
     }
   },
   "builtin_runtime": {
-    "enable_list": ["bash", "c", "cpp", "clang", "java", "python"],
+    "enable_list": ["c", "cpp"],
     "version": "0.0.0-alpha.8"
   },
   "judge": {
     "empty_wait": 5,
-    "max_concurrent": 4
+    "max_concurrent": 2
   },
   "docker": {
-    "wait": 10
+    "wait": 1
   }
 }

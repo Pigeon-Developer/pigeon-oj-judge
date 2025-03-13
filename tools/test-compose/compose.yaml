@@ -1,6 +1,6 @@
 services:
   judge:
-    image: pigeon-oj/server-dev
+    image: pigeon-oj/judge-dev
     privileged: true
     env_file: judge.env
     volumes:
@@ -10,11 +10,27 @@ services:
       - type: bind
         source: ./config.json
         target: /app/config.json
+      - type: bind
+        source: /tmp/hustoj-dev
+        target: /volume
     build:
       dockerfile: ./tools/test-compose/judge.Dockerfile
       context: ../..
 
+  hustoj:
+    image: pigeon-oj/hustoj-dev
+    volumes:
+      - type: bind
+        source: /tmp/hustoj-dev
+        target: /volume
+    build:
+      dockerfile: ./hustoj.Dockerfile
+    ports:
+      - "3000:80"
+
   mysql:
     image: pigeonojdev/compose-db:0.0.0-alpha.0
     env_file: db.env
+    ports:
+      - "3306:3306"
     restart: always
