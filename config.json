@@ -4,7 +4,9 @@
       "type": "hustoj-local",
       "data": {
         "path": "/tmp/hustoj-dev/data",
-        "host_path": "/tmp/hustoj-dev/data"
+        "host_path": "/tmp/hustoj-dev/data",
+        "base_path": "/tmp/hustoj-dev/data",
+        "host_base_path": "/tmp/hustoj-dev/data"
       }
     },
     "rw_config": {

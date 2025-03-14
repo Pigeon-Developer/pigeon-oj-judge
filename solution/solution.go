@@ -67,6 +67,18 @@ func GetSolutionDataHostPath(id int) string {
 	return ins.ProblemProvider.Data["host_path"].(string)
 }
 
+func GetBasePath(id int) string {
+	ins := InstancePool[id]
+
+	return ins.ProblemProvider.Data["base_path"].(string)
+}
+
+func GetHostBasePath(id int) string {
+	ins := InstancePool[id]
+
+	return ins.ProblemProvider.Data["host_base_path"].(string)
+}
+
 func NewSolutionPool(config SourceConfig) {
 	InstancePool = make(map[int]SolutionInstance)
 	createSolutionInstance(config)
