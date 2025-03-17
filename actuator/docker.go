@@ -45,6 +45,7 @@ func ImagePull(_image string) {
 }
 
 func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int) RunResult {
+	start := time.Now()
 	ret := RunResult{
 		ExitCode: 0,
 		Stdout:   "",
@@ -67,6 +68,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	// 默认使用 1G 的内存限制
 	size1G := int64(1 * 1024 * 1024 * 1024)
 
+	createStart := time.Since(start)
 	resp, err := dockerClient.ContainerCreate(ctx, &container.Config{
 		NetworkDisabled: true,
 		StopTimeout:     &stopTimeout,
@@ -104,6 +106,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 			},
 		},
 	}, nil, nil, "")
+	createEnd := time.Since(start)
 	if err != nil {
 		panic(err)
 	}
@@ -111,6 +114,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	if err := dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		panic(err)
 	}
+	startEnd := time.Since(start)
 
 	// 超时时停止容器
 	time.AfterFunc(containerRunTimeout, func() {
@@ -129,6 +133,7 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 			ret.ExitCode = int(result.StatusCode)
 		}
 	}
+	waitEnd := time.Since(start)
 
 	getLogCtx, cancelLogCtx := context.WithTimeout(context.Background(), containerRunTimeout)
 	defer cancelLogCtx()
@@ -151,6 +156,8 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	ret.Stdout = stdout.String()
 	ret.Stderr = stderr.String()
 
+	logEnd := time.Since(start)
+
 	stat, err := cgroup.Cgroup.Stat()
 	if err != nil {
 		panic(err)
@@ -162,6 +169,8 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 	removeCtx, cancelRemoveCtx := context.WithTimeout(context.Background(), containerRunTimeout)
 	defer cancelRemoveCtx()
 	dockerClient.ContainerRemove(removeCtx, resp.ID, container.RemoveOptions{})
+
+	removeEnd := time.Since(start)
 
 	if ret.ExitCode != 0 {
 		statJSON, err := json.Marshal(stat)
@@ -178,5 +187,12 @@ func RunInDocker(image string, cmd []string, mounts []mount.Mount, timeLimit int
 		}
 	}
 
+	fmt.Printf("createStart [%s]\n", createStart)
+	fmt.Printf("createEnd [%s]\n", createEnd)
+	fmt.Printf("startEnd [%s]\n", startEnd)
+	fmt.Printf("waitEnd [%s]\n", waitEnd)
+	fmt.Printf("logEnd [%s]\n", logEnd)
+	fmt.Printf("removeEnd [%s]\n", removeEnd)
+	fmt.Printf("UsageUsec [%d]\n", stat.CPU.GetUsageUsec())
 	return ret
 }

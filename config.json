@@ -23,7 +23,7 @@
   },
   "judge": {
     "empty_wait": 5,
-    "max_concurrent": 2
+    "max_concurrent": 1
   },
   "docker": {
     "wait": 1
