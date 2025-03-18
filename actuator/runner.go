@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Pigeon-Developer/pigeon-oj-judge/solution"
+	"github.com/Pigeon-Developer/pigeon-oj-judge/types"
 	"github.com/docker/docker/api/types/mount"
 )
 
@@ -25,7 +26,7 @@ type Runner struct {
 	hostBasePath string // 用户代码与编译产物都会放在这个目录下，是 docker host 可以访问到的目录结构
 
 	// 存放每个测试点的详细信息
-	checkPointDetail map[string]UserCodeRunResult
+	checkPointDetail map[string]types.UserCodeRunResult
 }
 
 // 使用内置的语言镜像
@@ -42,7 +43,7 @@ func NewRunnerBuiltin(job *solution.JudgeJob, basePath, hostBasePath string) *Ru
 		basePath:     basePath,
 		hostBasePath: hostBasePath,
 
-		checkPointDetail: make(map[string]UserCodeRunResult, 0),
+		checkPointDetail: make(map[string]types.UserCodeRunResult, 0),
 	}
 }
 
@@ -54,6 +55,9 @@ func (r *Runner) Judge() {
 		return
 	}
 
+	r.job.UpdateResult(solution.SolutionResult{
+		Result: solution.Result_RJ,
+	})
 	r.Run()
 }
 
@@ -113,7 +117,7 @@ func (r *Runner) RunAndCompare(checkPointName, hostArtifactPath, hostInDataPath,
 		},
 	}, runTimeLimit)
 
-	r.checkPointDetail[checkPointName] = UserCodeRunResult{
+	r.checkPointDetail[checkPointName] = types.UserCodeRunResult{
 		ExitCode:    runResult.ExitCode,
 		MemoryUsage: runResult.MemoryUsage,
 		TimeCost:    runResult.TimeCost,
@@ -150,7 +154,7 @@ func (r *Runner) RunAndCompare(checkPointName, hostArtifactPath, hostInDataPath,
 		match = 1
 	}
 
-	r.checkPointDetail[checkPointName] = UserCodeRunResult{
+	r.checkPointDetail[checkPointName] = types.UserCodeRunResult{
 		ExitCode:    runResult.ExitCode,
 		MemoryUsage: runResult.MemoryUsage,
 		TimeCost:    runResult.TimeCost,
@@ -211,9 +215,36 @@ func (r *Runner) Run() {
 
 		hasNext := r.RunAndCompare(e.Name(), hostArtifactPath, hostInDataPath, hostOutDataPath, outDataPath, systemOutput)
 		if !hasNext {
-
-			// @TODO 这里需要从测试点详情里面提取出 info
+			// 提取错误信息
+			for _, v := range r.checkPointDetail {
+				if v.ExitCode != 0 {
+					r.Info = v.Stderr
+					break
+				}
+			}
 			return
 		}
+	}
+}
+
+func (r *Runner) GetResult() solution.SolutionResult {
+	// 均获取最大值
+	timeCost := 0
+	memoryUsage := 0
+
+	for _, v := range r.checkPointDetail {
+		timeCost = int(math.Max(float64(timeCost), float64(v.TimeCost)))
+		memoryUsage = int(math.Max(float64(memoryUsage), float64(v.MemoryUsage)))
+	}
+
+	return solution.SolutionResult{
+		Result:      r.Result,
+		TimeCost:    timeCost,
+		MemoryUsage: memoryUsage / 1000,
+
+		Info:   r.Info,
+		Detail: r.checkPointDetail,
+
+		Solution: r.job.Data,
 	}
 }

@@ -5,26 +5,31 @@
 - app 中为控制功能，初始化数据库连接，多久轮询一次是否存在提交，对比结果如何回写等都在这里面实现
 - runtime 中为每个语言的编译/运行 docker 定义
 
-todo list
+### todo list
 
-- [ ] 允许手动配置 docker cgroup driver 是否为 systemd
+#### v0.1
+
+- [ ] 构建 docker image
+- [ ] 支持配置 docker cgroup driver 是否为 systemd
 - [ ] 处理代码中的 panic，对错误分类，改成可读的日志信息
 - [ ] 从数据库获取提交时需要加锁
+- [ ] pigeon-oj-tool 集成，可以读取 hustoj-php 配置自动创建 compose 文件
+
+#### v0.2
+
 - [ ] runtime 适配
   - [ ] 支持 sql
   - [ ] 支持 scratch3
   - [ ] 支持自定义 runtime 配置
   - [ ] 允许对指定 cid/pid 配置 runtime
-- [ ] 增加执行异常的信息
-  - [ ] 构建/执行时 CPU/内存/IO 超过限制
-- [ ] 资源限制
-  - [ ] 构建/执行时的 CPU/内存/IO 限制可以使用配置文件
-  - [ ] 允许分语言配置资源限制
 - [ ] hustoj-php 兼容
   - [ ] 支持 http 判题
   - [ ] 支持 udp 判题
   - [ ] 支持 redis 判题
   - [ ] 支持 spj
+- [ ] 资源限制
+  - [ ] 构建/执行时的 CPU/内存/IO 限制可以使用配置文件
+  - [ ] 允许分语言配置资源限制
 
 ## 差异
 
@@ -73,6 +78,8 @@ todo list
 ## 判题开销
 
 以下为 a+b 的判题开销
+
+目前统计的是整个容器的资源情况，VM 类型语言的内存使用会偏高
 
 ```
 +------------+-----------------+---------------+

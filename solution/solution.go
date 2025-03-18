@@ -84,8 +84,6 @@ func NewSolutionPool(config SourceConfig) {
 	createSolutionInstance(config)
 }
 
-func (job *JudgeJob) UpdateResult(result int) {
-	GetSolutionInstance(job.SourceID).Source.Update(job.Data.SolutionId, SolutionResult{
-		Result: result,
-	})
+func (job *JudgeJob) UpdateResult(result SolutionResult) {
+	GetSolutionInstance(job.SourceID).Source.Update(job.Data.SolutionId, result)
 }

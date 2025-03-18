@@ -65,8 +65,9 @@ func CompareLineByLine(file1, file2 string) bool {
 	}
 }
 
-func JudgeUserSubmit(job *solution.JudgeJob) int {
+func JudgeUserSubmit(job *solution.JudgeJob) solution.SolutionResult {
 	runner := NewRunnerBuiltin(job, solution.GetBasePath(job.SourceID), solution.GetHostBasePath(job.SourceID))
 	runner.Judge()
-	return runner.Result
+
+	return runner.GetResult()
 }

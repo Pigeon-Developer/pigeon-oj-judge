@@ -1,12 +1,15 @@
 package solution
 
+import "github.com/Pigeon-Developer/pigeon-oj-judge/types"
+
 // 数据库字段
 type SolutionRecord struct {
-	SolutionId int `json:"solution_id" db:"solution_id"`
-	ProblemId  int `json:"problem_id" db:"problem_id"`
-	ContestId  int `json:"contest_id" db:"contest_id"`
-	Language   int `json:"language" db:"language"`
-	Result     int `json:"result" db:"result"`
+	SolutionId int    `json:"solution_id" db:"solution_id"`
+	ProblemId  int    `json:"problem_id" db:"problem_id"`
+	ContestId  int    `json:"contest_id" db:"contest_id"`
+	Language   int    `json:"language" db:"language"`
+	Result     int    `json:"result" db:"result"`
+	UserId     string `json:"user_id" db:"user_id"`
 }
 
 type ProblemRecord struct {
@@ -66,6 +69,7 @@ type Solution struct {
 	SolutionId  int
 	ProblemId   int
 	ContestId   int
+	UserId      string
 	Language    int
 	TimeLimit   float64
 	MemoryLimit int
@@ -74,7 +78,14 @@ type Solution struct {
 
 type SolutionResult struct {
 	// 最终的结果
-	Result int
+	Result      int
+	TimeCost    int // 单位毫秒
+	MemoryUsage int // 单位 KiB
+
+	Info   string // CCE/RE 时对应的错误信息
+	Detail map[string]types.UserCodeRunResult
+
+	Solution *Solution
 }
 
 // 获取 solution 的接口
